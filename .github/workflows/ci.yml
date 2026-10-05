@@ -1,0 +1,28 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+      - run: dotnet test --configuration Release
+
+  docker:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: docker build -t ai-commerce-gateway .
+      - name: Smoke test the image
+        run: |
+          docker run -d --name gateway -p 8080:8080 ai-commerce-gateway
+          for i in $(seq 1 30); do curl -fs http://localhost:8080/healthz && break; sleep 1; done
+          curl -fs "http://localhost:8080/api/programs?query=2A" | grep -q '"programId":"vsa-double-axel-club"'
+          curl -fs "http://localhost:8080/api/programs/vsa-double-axel-club/availability?timeZone=Asia/Bangkok" | grep -q '"openForEnrollment":true'

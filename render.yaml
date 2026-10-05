@@ -1,0 +1,13 @@
+# Render Blueprint: render.com → New → Blueprint → this repository → Apply.
+services:
+  - type: web
+    name: vsa-ai-gateway
+    runtime: docker
+    plan: free
+    region: virginia
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /healthz
+    autoDeploy: true
+    envVars:
+      - key: PORT
+        value: "8080"
