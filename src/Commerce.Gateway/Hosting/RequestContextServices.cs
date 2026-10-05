@@ -69,6 +69,11 @@ public static partial class Channels
 
     public static bool IsValid(string? channel) => channel is not null && Pattern().IsMatch(channel);
 
+    public static bool IsLinkPreview(string? userAgent) => userAgent is not null && Preview().IsMatch(userAgent);
+
     [GeneratedRegex("^[a-z0-9-]{1,32}$")]
     private static partial Regex Pattern();
+
+    [GeneratedRegex("bot|crawl|spider|preview|facebookexternalhit|slack|telegram|whatsapp|discord|skype|embedly|curl|wget|python-requests", RegexOptions.IgnoreCase)]
+    private static partial Regex Preview();
 }

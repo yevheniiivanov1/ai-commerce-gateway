@@ -68,6 +68,56 @@ public class AvailabilityTests
     }
 
     [Fact]
+    public void Asking_about_today_after_its_class_says_the_class_took_place_not_that_there_is_none()
+    {
+        // Saturday 18:00 UTC: the 14:00 UTC class is over.
+        var service = new AvailabilityService(TestCatalog.Clock(new DateTimeOffset(2026, 10, 10, 18, 0, 0, TimeSpan.Zero)));
+
+        var a = service.Check(DoubleAxel, new DateOnly(2026, 10, 10), TestCatalog.Zone("America/Los_Angeles"));
+
+        Assert.True(a.RequestedDateHasClass);
+        Assert.DoesNotContain("no class that day", a.Explanation);
+        Assert.Contains("The class on October 10, 2026 (Sat Oct 10, 2026 · 07:00–07:45", a.Explanation);
+        Assert.Contains("has already taken place", a.Explanation);
+        // Sunday's class is under 24 hours away, so the first one a new member gets links for is next Saturday.
+        Assert.Equal(new DateTimeOffset(2026, 10, 17, 14, 0, 0, TimeSpan.Zero), a.SuggestedFirstClass!.Start);
+        Assert.Contains("To start with the class on Sat Oct 17, 2026 · 07:00–07:45 (America/Los_Angeles, UTC-07:00), enroll by Fri Oct 16, 2026 07:00", a.Explanation);
+    }
+
+    [Fact]
+    public void Without_a_date_the_answer_names_the_next_classes_and_the_first_one_to_aim_for()
+    {
+        var service = new AvailabilityService(TestCatalog.Clock());
+
+        var a = service.Check(DoubleAxel, null, null);
+
+        Assert.Contains("The next classes are Sat Oct 10, 2026 · 07:00–07:45 (America/Los_Angeles, UTC-07:00) and Sun Oct 11, 2026", a.Explanation);
+        Assert.Contains("To start with the class on Sat Oct 10, 2026 · 07:00–07:45 (America/Los_Angeles, UTC-07:00), enroll by Fri Oct 9, 2026 07:00", a.Explanation);
+        Assert.DoesNotContain("listed below", a.Explanation);
+        Assert.DoesNotContain("to start then", a.Explanation);
+    }
+
+    [Fact]
+    public void A_past_date_names_the_next_classes_in_the_answer_itself()
+    {
+        var service = new AvailabilityService(TestCatalog.Clock());
+
+        var a = service.Check(DoubleAxel, new DateOnly(2026, 9, 26), null);
+
+        Assert.Contains("September 26, 2026 has already passed. The next classes are Sat Oct 10, 2026", a.Explanation);
+    }
+
+    [Fact]
+    public void Viewers_across_the_date_line_are_told_which_local_days_the_classes_fall_on()
+    {
+        var service = new AvailabilityService(TestCatalog.Clock());
+
+        var a = service.Check(DoubleAxel, null, TestCatalog.Zone("Pacific/Auckland"));
+
+        Assert.Contains("every weekend (Saturday and Sunday, America/Los_Angeles time; Sunday and Monday in Pacific/Auckland)", a.Explanation);
+    }
+
+    [Fact]
     public void Class_times_follow_daylight_saving_unlike_the_static_table_on_the_landing_page()
     {
         // The page says "9 - 9.45 PM (ICT)". True in summer only: Bangkok has no DST, California does.
@@ -110,6 +160,9 @@ public class AvailabilityTests
     [InlineData("November 6", 2026, 11, 6)]
     [InlineData("Nov 6, 2027", 2027, 11, 6)]
     [InlineData("March 1", 2027, 3, 1)] // no year and already past this year → next March
+    [InlineData("2026-11-06T00:00:00Z", 2026, 11, 6)]
+    [InlineData("Nov 6th", 2026, 11, 6)]
+    [InlineData("November 1st, 2027", 2027, 11, 1)]
     public void Dates_are_read_the_way_assistants_pass_them(string text, int year, int month, int day)
     {
         Assert.True(TimeFormat.TryParseDate(text, new DateOnly(2026, 10, 5), out var date));

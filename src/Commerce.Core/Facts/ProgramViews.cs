@@ -21,9 +21,11 @@ public sealed record ProgramCard
     public required string Currency { get; init; }
     public required string Duration { get; init; }
     public required string Schedule { get; init; }
-    public required string Coaches { get; init; }
+    public required string Instructors { get; init; }
     public required string Summary { get; init; }
     public required string Enrollment { get; init; }
+    /// <summary>A no-commitment way to try it first, when the merchant has one.</summary>
+    public string? FreeTrial { get; init; }
     public required string OfferId { get; init; }
     public bool? WithinBudget { get; init; }
     public IReadOnlyList<string> WhyItMatches { get; init; } = [];
@@ -40,7 +42,7 @@ public sealed record ProgramDetails
     public required string Skill { get; init; }
     public required FormatInfo Format { get; init; }
     public required LevelInfo Level { get; init; }
-    public required IReadOnlyList<CoachInfo> Coaches { get; init; }
+    public required IReadOnlyList<InstructorInfo> Instructors { get; init; }
     public required ScheduleInfo Schedule { get; init; }
     public required PricingInfo Pricing { get; init; }
     public required IReadOnlyList<string> Included { get; init; }
@@ -66,7 +68,7 @@ public sealed record LevelInfo(
     ProgramRef? PreviousLevel,
     ProgramRef? NextLevel);
 
-public sealed record CoachInfo(string Name, string Title, string? Bio, string? PrivateLessonRate, string Teaches);
+public sealed record InstructorInfo(string Name, string Title, string? Bio, string? PrivateLessonRate, string Teaches);
 
 public sealed record ScheduleInfo
 {
@@ -124,6 +126,8 @@ public sealed record EnrollmentView
     public required string OfferName { get; init; }
     public required Uri CheckoutUrl { get; init; }
     public required string Price { get; init; }
+    /// <summary>Who the program is for and where to go instead, to state with the link.</summary>
+    public required string Eligibility { get; init; }
     /// <summary>Terms to state before the buyer pays.</summary>
     public required IReadOnlyList<string> Disclosures { get; init; }
     public ClassTime? FirstClass { get; init; }

@@ -15,6 +15,8 @@ public class SearchTests
     [InlineData("Does VSA offer online training for Double Axel?")]
     [InlineData("2A")]
     [InlineData("2axel club")]
+    [InlineData("2-axel")]
+    [InlineData("help with my 2 axel")]
     public void Double_axel_requests_find_the_double_axel_club_alone(string query)
     {
         Assert.Equal(["vsa-double-axel-club"], Ids(query));

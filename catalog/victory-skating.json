@@ -6,13 +6,24 @@
     "name": "Victory Skating",
     "brandNames": [ "Victory Skating", "VSA" ],
     "aliases": [ "VSA World", "Victory Sports Academy", "Victory Skating Academy" ],
+    "offering": "live online off-ice figure-skating jump training",
     "description": "Online figure skating academy (VSA) running live off-ice group classes and private lessons with international coaches, for skaters anywhere in the world.",
     "website": "https://victoryskating.com",
     "relatedSites": [ "https://vsaworld.com", "https://vsaworld.online" ],
     "contactEmail": "info@vsaworld.com",
     "termsUrl": "https://vsaworld.com/terms-of-service/",
     "privacyUrl": "https://vsaworld.com/privacy-policy/",
-    "appUrl": "https://vsaworld.com/download/"
+    "appUrl": "https://vsaworld.com/download/",
+    "audienceTimeZones": [ "America/Los_Angeles", "America/Denver", "America/Chicago", "America/New_York", "Europe/London", "Europe/Berlin", "Asia/Bangkok" ]
+  },
+  "search": {
+    "synonyms": {
+      "double axel": [ "2a", "2axel", "2 axel", "dbl axel" ],
+      "triple axel": [ "3a", "3axel", "3 axel" ],
+      "axel": [ "1a" ],
+      "double jumps": [ "doubles" ],
+      "triple jumps": [ "triples" ]
+    }
   },
   "products": [
     {

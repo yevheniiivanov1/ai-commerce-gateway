@@ -1,0 +1,54 @@
+{
+  "schemaVersion": "1.0",
+  "updatedOn": "2026-10-01",
+  "merchant": {
+    "id": "flow-yoga",
+    "name": "Flow Yoga Studio",
+    "brandNames": [ "Flow Yoga Studio" ],
+    "offering": "live online yoga and mobility classes",
+    "description": "A fictional studio. It exists to prove the gateway carries no merchant-specific text.",
+    "website": "https://flow-yoga.example",
+    "contactEmail": "hello@flow-yoga.example",
+    "audienceTimeZones": [ "Europe/London", "America/New_York" ]
+  },
+  "search": {
+    "synonyms": { "vinyasa": [ "flow class" ] }
+  },
+  "products": [
+    {
+      "id": "flow-morning-vinyasa",
+      "slug": "morning-vinyasa",
+      "name": "Morning Vinyasa 10-Class Pass",
+      "shortName": "Morning Vinyasa",
+      "category": "Online yoga — live group classes",
+      "skill": "Vinyasa yoga",
+      "keywords": [ "vinyasa", "yoga", "morning", "mobility" ],
+      "summary": "Ten live online vinyasa classes on Tuesday and Thursday mornings, valid for three months.",
+      "description": "A steady, breath-led vinyasa practice for all levels.",
+      "format": { "mode": "live-online", "setting": "at home", "groupFormat": "group" },
+      "level": { "label": "All levels", "rank": 1, "audience": "Anyone who can hold a plank for 30 seconds." },
+      "instructors": [ { "name": "Anna", "title": "Instructor", "teaches": [ "Tuesday", "Thursday" ] } ],
+      "schedule": {
+        "days": [ "Tuesday", "Thursday" ],
+        "startTime": "07:30",
+        "durationMinutes": 60,
+        "timeZone": "Europe/London",
+        "enrollment": { "mode": "rolling", "accessLeadTimeHours": 2 }
+      },
+      "equipment": [ "Yoga mat" ],
+      "offers": [
+        {
+          "id": "flow-morning-vinyasa-10",
+          "name": "10-Class Pass",
+          "price": { "amount": 120, "currency": "GBP" },
+          "billing": { "type": "oneTime", "refundPolicy": "Unused classes are refundable within 30 days." },
+          "term": { "months": 3, "classes": 10 },
+          "inclusions": [ "10 live classes, valid for 3 months" ],
+          "checkout": { "provider": "link", "url": "https://flow-yoga.example/book/morning-vinyasa" }
+        }
+      ],
+      "landingPage": { "url": "https://flow-yoga.example/vinyasa", "displayedStartDate": "Next class Tuesday", "interpretation": "Names the next class; the pass can start any week." },
+      "sources": [ { "url": "https://flow-yoga.example/vinyasa", "capturedOn": "2026-10-01", "covers": "everything" } ]
+    }
+  ]
+}

@@ -91,6 +91,18 @@ public class CatalogTests
     }
 
     [Fact]
+    public void The_paste_once_snippet_has_no_date_that_could_go_stale()
+    {
+        var catalog = TestCatalog.Load();
+
+        var snippet = JsonLd.ScriptTag(catalog, catalog.Find("double-axel-club")!, now: null);
+
+        Assert.StartsWith("<script type=\"application/ld+json\">", snippet);
+        Assert.DoesNotContain("startDate", snippet);
+        Assert.Contains("\"repeatFrequency\": \"P1W\"", snippet);
+    }
+
+    [Fact]
     public void Internal_review_notes_never_reach_an_ai_channel()
     {
         var catalog = TestCatalog.Load();

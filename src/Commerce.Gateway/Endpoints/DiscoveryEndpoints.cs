@@ -35,9 +35,9 @@ public static class DiscoveryEndpoints
                 ? Results.Text(WithNotice(FactSheet.Markdown(facts.Details(product, null, urls.Base)), options.Value), "text/markdown; charset=utf-8")
                 : Results.NotFound());
 
-        group.MapGet("/programs/{slug}/jsonld", (string slug, Catalog catalog, TimeProvider clock) =>
+        group.MapGet("/programs/{slug}/jsonld", (string slug, Catalog catalog) =>
             catalog.Find(slug) is { } product
-                ? Results.Text(JsonLd.ScriptTag(catalog, product, clock.GetUtcNow()), "text/plain; charset=utf-8")
+                ? Results.Text(JsonLd.ScriptTag(catalog, product, now: null), "text/plain; charset=utf-8")
                 : Results.NotFound());
 
         group.MapGet("/programs/{slug}", (string slug, Catalog catalog, ProgramFacts facts, TimeProvider clock, PublicUrls urls, IOptions<GatewayOptions> options) =>
@@ -72,7 +72,7 @@ public static class DiscoveryEndpoints
     private static string LlmsIndex(Catalog catalog, ProgramFacts facts, Uri baseUrl)
     {
         var products = catalog.Listed.OrderBy(p => p.Level.Rank).ToList();
-        var cards = products.Select(p => facts.Card(p, p.Offers[0], baseUrl)).ToList();
+        var cards = products.Select(p => facts.Card(p, baseUrl)).ToList();
         return FactSheet.LlmsTxt(facts, products, cards, baseUrl);
     }
 
@@ -87,10 +87,10 @@ public static class DiscoveryEndpoints
         body.Append("<h2>Programs</h2><ul class=\"cards\">");
         foreach (var product in catalog.Listed.OrderBy(p => p.Level.Rank))
         {
-            var card = facts.Card(product, product.Offers[0], baseUrl);
+            var card = facts.Card(product, baseUrl);
             body.Append($"<li><a href=\"/programs/{product.Slug}\"><strong>{HtmlEncode(card.Name)}</strong></a>" +
                 $"<span>{HtmlEncode(product.Level.Label)} · {HtmlEncode(card.Skill)}</span>" +
-                $"<span>{HtmlEncode(card.Price)}</span><span>{HtmlEncode(card.Schedule)}</span><span>Coach: {HtmlEncode(card.Coaches)}</span></li>");
+                $"<span>{HtmlEncode(card.Price)}</span><span>{HtmlEncode(card.Schedule)}</span><span>Instructors: {HtmlEncode(card.Instructors)}</span></li>");
         }
         body.Append("</ul>");
         body.Append("<h2>For AI assistants and agents</h2><dl class=\"facts\">");
@@ -116,7 +116,7 @@ public static class DiscoveryEndpoints
         Row(body, "Term", $"{p.Pricing.Term} ({p.Pricing.PerClass})");
         Row(body, "Schedule", p.Schedule.Pattern);
         Row(body, "Enrollment", p.Schedule.Enrollment);
-        Row(body, "Coach", string.Join("; ", p.Coaches.Select(c => $"{c.Title} {c.Name} ({c.Teaches})")));
+        Row(body, "Instructors", string.Join("; ", p.Instructors.Select(c => $"{c.Title} {c.Name} ({c.Teaches})")));
         Row(body, "Level", $"{p.Level.Label} — {p.Level.ForWho}");
         if (p.Level.NotSuitableFor is { } not)
             Row(body, "Not for", not);
@@ -143,9 +143,9 @@ public static class DiscoveryEndpoints
             body.Append($"<li><strong>{HtmlEncode(module.Title)}:</strong> {HtmlEncode(string.Join("; ", module.Points))}</li>");
         body.Append($"</ul><p><strong>You need:</strong> {HtmlEncode(string.Join(", ", p.Equipment))}.</p>");
 
-        body.Append("<h2>Coaches</h2><ul>");
-        foreach (var coach in p.Coaches)
-            body.Append($"<li><strong>{HtmlEncode(coach.Title)} {HtmlEncode(coach.Name)}</strong> ({HtmlEncode(coach.Teaches)}). {HtmlEncode(coach.Bio ?? "")} {HtmlEncode(coach.PrivateLessonRate ?? "")}</li>");
+        body.Append("<h2>Instructors</h2><ul>");
+        foreach (var instructor in p.Instructors)
+            body.Append($"<li><strong>{HtmlEncode(instructor.Title)} {HtmlEncode(instructor.Name)}</strong> ({HtmlEncode(instructor.Teaches)}). {HtmlEncode(instructor.Bio ?? "")} {HtmlEncode(instructor.PrivateLessonRate ?? "")}</li>");
         body.Append("</ul>");
 
         if (p.FreeTrial is { } trial)
@@ -163,9 +163,7 @@ public static class DiscoveryEndpoints
             string.Join(", ", p.Sources.Select(s => $"<a href=\"{HtmlEncode(s.Url.ToString())}\">{HtmlEncode(s.Url.Host + s.Url.AbsolutePath)}</a>")) +
             $". Contact: {HtmlEncode(p.Brand.ContactEmail ?? "")}.</footer>");
 
-        // JSON-LD is embedded in a <script>; "</" must not close it early.
-        var jsonLd = JsonLd.ForProduct(catalog, product, now).Replace("</", "<\\/");
-        return Page($"{p.Name} — {p.Brand.Name}", p.Summary, $"<script type=\"application/ld+json\">\n{jsonLd}\n</script>" +
+        return Page($"{p.Name} — {p.Brand.Name}", p.Summary, JsonLd.ScriptTag(catalog, product, now) +
             $"<link rel=\"alternate\" type=\"text/markdown\" href=\"/programs/{product.Slug}.md\">", body.ToString(), options);
     }
 

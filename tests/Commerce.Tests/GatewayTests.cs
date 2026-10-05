@@ -69,7 +69,7 @@ public class GatewayTests : IClassFixture<GatewayTests.Factory>
         Assert.Equal("$299 billed every 6 months until cancelled (auto-renews)", program.GetProperty("price").GetString());
 
         var details = await CallAsync(client, "get_program_details", new() { ["programId"] = "vsa-double-axel-club", ["timeZone"] = "Europe/London" });
-        Assert.Equal("Marta", details.GetProperty("coaches")[0].GetProperty("name").GetString());
+        Assert.Equal("Marta", details.GetProperty("instructors")[0].GetProperty("name").GetString());
         Assert.Equal("Level 3", details.GetProperty("level").GetProperty("label").GetString());
         Assert.Equal("open", details.GetProperty("enrollment").GetProperty("status").GetString());
         Assert.Contains("struck-through", details.GetProperty("pricing").GetProperty("listPriceNote").GetString());
@@ -85,6 +85,8 @@ public class GatewayTests : IClassFixture<GatewayTests.Factory>
         var reference = enrollment.GetProperty("referenceId").GetString()!;
         var checkoutUrl = new Uri(enrollment.GetProperty("checkoutUrl").GetString()!);
         Assert.Contains(enrollment.GetProperty("disclosures").EnumerateArray(), d => d.GetString()!.Contains("auto-renews"));
+        Assert.Contains("start with the Double Jumps Club (Level 2)", enrollment.GetProperty("eligibility").GetString());
+        Assert.Contains("4-Day Double Axel Plan (free trial)", enrollment.GetProperty("eligibility").GetString());
         Assert.Equal($"/checkout/vsa-double-axel-club-6m?ref={reference}&channel=perplexity", checkoutUrl.PathAndQuery);
 
         var browser = _factory.CreateClient(new WebApplicationFactoryClientOptions { AllowAutoRedirect = false });
@@ -117,6 +119,24 @@ public class GatewayTests : IClassFixture<GatewayTests.Factory>
 
         Assert.True(result.IsError);
         Assert.Contains("vsa-double-axel-club", result.Content.OfType<TextContentBlock>().Single().Text);
+    }
+
+    [Fact]
+    public async Task Unpaid_sessions_and_link_previews_do_not_count_as_funnel_progress()
+    {
+        var http = _factory.CreateClient(new WebApplicationFactoryClientOptions { AllowAutoRedirect = false });
+        var preview = new HttpRequestMessage(HttpMethod.Get, "/checkout/vsa-double-axel-club-6m?ref=enr_preview&channel=perplexity");
+        preview.Headers.UserAgent.ParseAdd("TelegramBot (like TwitterBot)");
+
+        Assert.Equal(HttpStatusCode.Redirect, (await http.SendAsync(preview, Ct)).StatusCode);
+        await PostSignedWebhookAsync(http, JsonSerializer.Serialize(new
+        {
+            type = "checkout.session.completed",
+            data = new { @object = new { client_reference_id = "enr_unpaid", amount_total = 29900, currency = "usd", payment_status = "unpaid" } },
+        }));
+
+        var funnel = await http.GetFromJsonAsync<JsonElement>("/api/funnel?take=500", Ct);
+        Assert.DoesNotContain(funnel.EnumerateArray(), e => e.GetProperty("referenceId").GetString() is "enr_preview" or "enr_unpaid");
     }
 
     [Fact]

@@ -55,7 +55,7 @@ public sealed class Storefront(
         var outcome = enrollments.Start(new EnrollmentRequest(product.Id, offerId, Date(preferredStartDate, zone), zone, channel));
         if (outcome.Enrollment is not { } enrollment)
             throw new StorefrontException(outcome.Message!, outcome.Error == EnrollmentError.UnknownOffer);
-        return ProgramFacts.ToView(enrollment);
+        return facts.ToView(enrollment);
     }
 
     private Product Product(string programId) =>

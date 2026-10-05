@@ -5,7 +5,13 @@ namespace Commerce.Core.Checkout;
 
 /// <param name="ReferenceId">Our enrollment id; the payment platform echoes it back on completion.</param>
 /// <param name="Channel">Which assistant or surface sent the buyer, e.g. "perplexity".</param>
-public sealed record CheckoutContext(string ReferenceId, string Channel);
+public sealed record CheckoutContext(string ReferenceId, string Channel)
+{
+    /// <summary>Channels that are people clicking links rather than an assistant acting.</summary>
+    public static readonly IReadOnlySet<string> HumanChannels = new HashSet<string> { "web", "link" };
+
+    public string Medium => HumanChannels.Contains(Channel) ? "referral" : "ai-assistant";
+}
 
 /// <summary>
 /// Turns an offer into the URL where the buyer pays. One implementation per payment platform;
@@ -32,7 +38,7 @@ public sealed class StripePaymentLinkProvider : ICheckoutProvider
         [
             ("client_reference_id", context.ReferenceId),
             ("utm_source", context.Channel),
-            ("utm_medium", "ai-assistant"),
+            ("utm_medium", context.Medium),
             ("utm_campaign", "agentic-enrollment"),
         ]);
 }
@@ -46,7 +52,7 @@ public sealed class PlainLinkProvider : ICheckoutProvider
     public string Name => "link";
 
     public Uri CreateCheckoutUrl(Offer offer, CheckoutContext context) =>
-        Url.WithQuery(offer.Checkout.Url, [("utm_source", context.Channel), ("utm_medium", "ai-assistant")]);
+        Url.WithQuery(offer.Checkout.Url, [("utm_source", context.Channel), ("utm_medium", context.Medium)]);
 }
 
 public sealed partial class CheckoutProviderRegistry(IEnumerable<ICheckoutProvider> providers)

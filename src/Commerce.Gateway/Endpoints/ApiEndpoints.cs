@@ -7,7 +7,7 @@ using Microsoft.AspNetCore.Http.HttpResults;
 namespace Commerce.Gateway.Endpoints;
 
 public sealed record EnrollmentBody(
-    [property: Description("Program to join, e.g. vsa-double-axel-club.")] string ProgramId,
+    [property: Description("Program to join: a programId from /api/programs.")] string ProgramId,
     [property: Description("Offer to buy; defaults to the program's open offer.")] string? OfferId = null,
     [property: Description("Preferred start date, YYYY-MM-DD.")] string? PreferredStartDate = null,
     [property: Description("Buyer's IANA time zone.")] string? TimeZone = null,

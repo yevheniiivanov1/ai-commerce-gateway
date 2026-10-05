@@ -18,4 +18,7 @@
   <ItemGroup>
     <Using Include="Xunit" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="catalogs\*.json" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
 </Project>

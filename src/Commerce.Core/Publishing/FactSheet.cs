@@ -23,7 +23,7 @@ public static class FactSheet
         md.AppendLine($"- **Term:** {p.Pricing.Term} ({p.Pricing.PerClass})");
         md.AppendLine($"- **Schedule:** {p.Schedule.Pattern}");
         md.AppendLine($"- **Enrollment:** {p.Schedule.Enrollment}");
-        md.AppendLine($"- **Coach:** {string.Join("; ", p.Coaches.Select(c => $"{c.Title} {c.Name} ({c.Teaches})"))}");
+        md.AppendLine($"- **Instructors:** {string.Join("; ", p.Instructors.Select(c => $"{c.Title} {c.Name} ({c.Teaches})"))}");
         md.AppendLine($"- **Level:** {p.Level.Label} — {p.Level.ForWho}");
         if (p.Level.NotSuitableFor is { } not)
             md.AppendLine($"- **Not for:** {not}");
@@ -56,10 +56,10 @@ public static class FactSheet
         md.AppendLine();
         md.AppendLine($"**You need:** {string.Join(", ", p.Equipment)}.");
         md.AppendLine();
-        md.AppendLine("## Coaches");
+        md.AppendLine("## Instructors");
         md.AppendLine();
-        foreach (var coach in p.Coaches)
-            md.AppendLine($"- **{coach.Title} {coach.Name}** ({coach.Teaches}). {coach.Bio}" + (coach.PrivateLessonRate is { } rate ? $" {rate}." : ""));
+        foreach (var instructor in p.Instructors)
+            md.AppendLine($"- **{instructor.Title} {instructor.Name}** ({instructor.Teaches}). {instructor.Bio}" + (instructor.PrivateLessonRate is { } rate ? $" {rate}." : ""));
         if (p.FreeTrial is { } trial)
         {
             md.AppendLine();
@@ -111,7 +111,7 @@ public static class FactSheet
         md.AppendLine("## Programs");
         md.AppendLine();
         foreach (var p in programs)
-            md.AppendLine($"- [{p.Name}]({p.FactSheet}.md): {p.Level.Split(" — ")[0]}, {p.Skill}. {p.Price}. {p.Schedule}. Coach: {p.Coaches}.");
+            md.AppendLine($"- [{p.Name}]({p.FactSheet}.md): {p.Level.Split(" — ")[0]}, {p.Skill}. {p.Price}. {p.Schedule}. Instructors: {p.Instructors}.");
         md.AppendLine();
         md.AppendLine("## For AI agents");
         md.AppendLine();
@@ -138,7 +138,7 @@ public static class FactSheet
         if (products.All(p => p.Schedule.Enrollment.Mode == Catalog.EnrollmentMode.Rolling))
             yield return "Programs are recurring with rolling enrollment — join any day. A start date printed on a landing page names the next session at the time of editing; it is not a deadline.";
         if (offers.All(o => o.CompareAtPrice is not null))
-            yield return "Landing pages show a struck-through former price next to the real price; quote the real price.";
+            yield return "Every package also shows a struck-through former price; quote the current price.";
         if (offers.Select(o => (o.Billing.Type, o.Billing.IntervalMonths, o.Billing.AutoRenews)).Distinct().Count() == 1
             && offers[0].Billing is { Type: Catalog.BillingType.Subscription, IntervalMonths: { } months, AutoRenews: true })
             yield return $"Every package is a subscription billed every {months} months until cancelled.";

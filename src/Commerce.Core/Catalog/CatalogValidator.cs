@@ -17,6 +17,11 @@ public static class CatalogValidator
             errors.Add("merchant: at least one brand name is required");
         if (catalog.Products.Count == 0)
             errors.Add("catalog has no products");
+        foreach (var zone in catalog.Merchant.AudienceTimeZones.Where(z => !TimeZoneInfo.TryFindSystemTimeZoneById(z, out _)))
+            errors.Add($"merchant: unknown audience time zone '{zone}'");
+        foreach (var (phrase, variants) in catalog.Search.Synonyms)
+            if (string.IsNullOrWhiteSpace(phrase) || variants.Count == 0 || variants.Any(string.IsNullOrWhiteSpace))
+                errors.Add($"search: synonym '{phrase}' needs a phrase and at least one non-empty variant");
 
         Duplicates(catalog.Products.Select(p => p.Id), "product id", errors);
         Duplicates(catalog.Products.Select(p => p.Slug), "product slug", errors);

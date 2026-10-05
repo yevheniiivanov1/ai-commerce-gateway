@@ -38,7 +38,9 @@ public static class CheckoutEndpoints
         var source = Channels.IsValid(channel) ? channel! : Channels.FromReferrer(request.Headers.Referer, request.Host.Host);
 
         var target = providers.CreateCheckoutUrl(offer, new CheckoutContext(reference, source));
-        funnel.Record(new FunnelEvent(clock.GetUtcNow(), FunnelStage.CheckoutOpened, reference, product.Id, offer.Id, source, offer.Price));
+        // Link unfurlers (messengers, social previews) fetch the URL too; they are not buyers.
+        if (!Channels.IsLinkPreview(request.Headers.UserAgent))
+            funnel.Record(new FunnelEvent(clock.GetUtcNow(), FunnelStage.CheckoutOpened, reference, product.Id, offer.Id, source, offer.Price));
         return Results.Redirect(target.AbsoluteUri);
     }
 
@@ -54,12 +56,11 @@ public static class CheckoutEndpoints
         if (!StripeWebhook.VerifySignature(payload, request.Headers["Stripe-Signature"], options.Value.StripeWebhookSecret, now, StripeWebhook.DefaultTolerance))
             return Results.BadRequest();
 
-        if (StripeWebhook.ReadCompletedCheckout(payload) is { ReferenceId: { } reference } completed)
+        // "completed" also fires for bank debits that haven't cleared; those count when async_payment_succeeded arrives.
+        if (StripeWebhook.ReadCompletedCheckout(payload) is { ReferenceId: { } reference, IsPaid: true } completed)
         {
             var start = funnel.FindStart(reference);
-            var amount = completed.AmountTotalMinor is { } minor && completed.Currency is { } currency
-                ? new Money(minor / 100m, currency)
-                : null;
+            var amount = completed.AmountTotal is { } total ? new Money(total, completed.Currency!) : null;
             funnel.Record(new FunnelEvent(now, FunnelStage.PaymentCompleted, reference, start?.ProductId, start?.OfferId, start?.Channel, amount));
             log.LogInformation("Payment completed for enrollment {Reference} via {Channel}", reference, start?.Channel ?? "unknown");
         }

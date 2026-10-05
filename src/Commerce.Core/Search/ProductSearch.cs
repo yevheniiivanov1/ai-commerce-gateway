@@ -14,17 +14,22 @@ public sealed record SearchResult(IReadOnlyList<ProductMatch> Matches, bool Quer
 /// dozen products doesn't need embeddings, and exact phrase hits ("double axel" vs "axel") are
 /// what decides the ranking. Brand words are ignored: every product here belongs to the brand.
 /// </summary>
-public sealed partial class ProductSearch(Catalog.Catalog catalog)
+public sealed partial class ProductSearch
 {
-    // Skating shorthand an assistant may pass through verbatim.
-    private static readonly (Regex Pattern, string Replacement)[] Synonyms =
-    [
-        (new Regex(@"\b(2a|2axel|2-axel|dbl axel)\b", RegexOptions.Compiled), "double axel"),
-        (new Regex(@"\b(3a|3axel)\b", RegexOptions.Compiled), "triple axel"),
-        (new Regex(@"\b1a\b", RegexOptions.Compiled), "axel"),
-        (new Regex(@"\bdoubles\b", RegexOptions.Compiled), "double jumps"),
-        (new Regex(@"\btriples\b", RegexOptions.Compiled), "triple jumps"),
-    ];
+    private readonly Catalog.Catalog _catalog;
+    private readonly (Regex Pattern, string Replacement)[] _synonyms;
+
+    public ProductSearch(Catalog.Catalog catalog)
+    {
+        _catalog = catalog;
+        // Shorthand buyers type ("2A", "2-axel") comes from the catalog. Variants are matched on
+        // normalised text, so "2-axel" and "2 axel" are the same, and longer variants win.
+        _synonyms = catalog.Document.Search.Synonyms
+            .SelectMany(s => s.Value.Select(v => (Variant: Clean(v), Canonical: Clean(s.Key))))
+            .OrderByDescending(s => s.Variant.Length)
+            .Select(s => (new Regex($@"(?<![a-z0-9]){Regex.Escape(s.Variant)}(?![a-z0-9])", RegexOptions.CultureInvariant), s.Canonical))
+            .ToArray();
+    }
 
     private static readonly HashSet<string> StopWords =
     [
@@ -36,7 +41,7 @@ public sealed partial class ProductSearch(Catalog.Catalog catalog)
 
     public SearchResult Search(SearchRequest request)
     {
-        var brandWords = catalog.Merchant.BrandNames.Concat(catalog.Merchant.Aliases)
+        var brandWords = _catalog.Merchant.BrandNames.Concat(_catalog.Merchant.Aliases)
             .SelectMany(Tokens).ToHashSet();
         var query = Normalize(request.Query ?? "");
         var terms = Tokens(query)
@@ -44,7 +49,7 @@ public sealed partial class ProductSearch(Catalog.Catalog catalog)
             .Distinct()
             .ToList();
 
-        var products = catalog.Listed.ToList();
+        var products = _catalog.Listed.ToList();
 
         // Words every product shares ("ice" from "off-ice", "jumps") say nothing about which one
         // the skater means. Only meaningful with more than one product to tell apart.
@@ -76,7 +81,7 @@ public sealed partial class ProductSearch(Catalog.Catalog catalog)
         return new SearchResult(ranked, QueryMatchedNothing: !anyHit);
     }
 
-    private static ProductMatch Score(Product product, HashSet<string> vocabulary, HashSet<string> phraseHits, List<string> terms, SearchRequest request)
+    private ProductMatch Score(Product product, HashSet<string> vocabulary, HashSet<string> phraseHits, List<string> terms, SearchRequest request)
     {
         var reasons = new List<string>();
         double score = 0;
@@ -94,8 +99,7 @@ public sealed partial class ProductSearch(Catalog.Catalog catalog)
         if (hits.Count > 0 && reasons.Count == 0)
             reasons.Add($"mentions {string.Join(", ", hits)}");
 
-        var offer = product.Offers.Where(o => o.Availability == OfferAvailability.Open).DefaultIfEmpty(product.Offers[0])
-            .MinBy(o => o.Price.Amount)!;
+        var offer = product.PrimaryOffer;
         bool? withinBudget = null;
         if (request.MaxPrice is { } max)
         {
@@ -116,25 +120,28 @@ public sealed partial class ProductSearch(Catalog.Catalog catalog)
         return new ProductMatch(product, offer, score, withinBudget, reasons);
     }
 
-    private static IEnumerable<string> Phrases(Product product) =>
+    private IEnumerable<string> Phrases(Product product) =>
         product.Keywords.Append(product.Skill).Append(product.ShortName).Concat(product.Aliases)
             .Select(Normalize).Where(p => p.Contains(' ')).Distinct();
 
-    private static HashSet<string> Vocabulary(Product product) =>
+    private HashSet<string> Vocabulary(Product product) =>
         Tokens(string.Join(' ', product.Keywords.Append(product.Skill).Append(product.Name).Concat(product.Aliases))).ToHashSet();
 
-    private static string Normalize(string text)
+    private string Normalize(string text)
     {
-        var lower = NonWord().Replace(text.ToLowerInvariant().Replace("’", "'").Replace("'", ""), " ");
-        foreach (var (pattern, replacement) in Synonyms)
-            lower = pattern.Replace(lower, replacement);
-        return Spaces().Replace(lower, " ").Trim();
+        var normalized = Clean(text);
+        foreach (var (pattern, replacement) in _synonyms)
+            normalized = pattern.Replace(normalized, replacement);
+        return Spaces().Replace(normalized, " ").Trim();
     }
+
+    private static string Clean(string text) =>
+        Spaces().Replace(NonWord().Replace(text.ToLowerInvariant().Replace("’", "'").Replace("'", ""), " "), " ").Trim();
 
     private static bool ContainsPhrase(string text, string phrase) =>
         $" {text} ".Contains($" {phrase} ", StringComparison.Ordinal);
 
-    private static IEnumerable<string> Tokens(string text) =>
+    private IEnumerable<string> Tokens(string text) =>
         Normalize(text).Split(' ', StringSplitOptions.RemoveEmptyEntries);
 
     [GeneratedRegex(@"[^a-z0-9]+")]

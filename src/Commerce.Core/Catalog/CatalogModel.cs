@@ -1,3 +1,5 @@
+using System.Text.Json.Serialization;
+
 namespace Commerce.Core.Catalog;
 
 // The canonical, platform-independent product model. Every channel (MCP tools, REST, JSON-LD,
@@ -9,7 +11,14 @@ public sealed record CatalogDocument
     public required string SchemaVersion { get; init; }
     public required DateOnly UpdatedOn { get; init; }
     public required Merchant Merchant { get; init; }
+    public SearchSettings Search { get; init; } = new();
     public required IReadOnlyList<Product> Products { get; init; }
+}
+
+public sealed record SearchSettings
+{
+    /// <summary>Canonical phrase → the shorthand buyers type for it ("double axel" ← "2a", "2 axel").</summary>
+    public IReadOnlyDictionary<string, IReadOnlyList<string>> Synonyms { get; init; } = new Dictionary<string, IReadOnlyList<string>>();
 }
 
 public sealed record Merchant
@@ -19,6 +28,8 @@ public sealed record Merchant
     /// <summary>Names the business trades under; all of them should resolve to this merchant.</summary>
     public required IReadOnlyList<string> BrandNames { get; init; }
     public IReadOnlyList<string> Aliases { get; init; } = [];
+    /// <summary>What the merchant sells, as a noun phrase: "live online yoga classes".</summary>
+    public required string Offering { get; init; }
     public required string Description { get; init; }
     public required Uri Website { get; init; }
     public IReadOnlyList<Uri> RelatedSites { get; init; } = [];
@@ -26,6 +37,8 @@ public sealed record Merchant
     public Uri? TermsUrl { get; init; }
     public Uri? PrivacyUrl { get; init; }
     public Uri? AppUrl { get; init; }
+    /// <summary>Where buyers mostly are: class times are also shown in these zones.</summary>
+    public IReadOnlyList<string> AudienceTimeZones { get; init; } = [];
 }
 
 public enum ProductStatus { Active, Paused, Retired }
@@ -57,6 +70,10 @@ public sealed record Product
     /// <summary>Open questions for the merchant. Internal: never exposed to AI channels.</summary>
     public IReadOnlyList<string> ReviewNotes { get; init; } = [];
     public ProductStatus Status { get; init; } = ProductStatus.Active;
+
+    /// <summary>The offer every channel quotes: the first open one, else the first listed.</summary>
+    [JsonIgnore]
+    public Offer PrimaryOffer => Offers.FirstOrDefault(o => o.Availability == OfferAvailability.Open) ?? Offers[0];
 }
 
 public sealed record DeliveryFormat

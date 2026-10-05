@@ -7,53 +7,58 @@ namespace Commerce.Core.Facts;
 /// <summary>Projects catalog entries into the AI-facing views.</summary>
 public sealed class ProgramFacts(Catalog.Catalog catalog, AvailabilityService availability, TimeProvider clock)
 {
-    // The zones the landing page prints a timetable for.
-    private static readonly string[] ReferenceZones =
-        ["America/Los_Angeles", "America/Denver", "America/Chicago", "America/New_York", "Europe/London", "Europe/Berlin", "Asia/Bangkok"];
-
     public Merchant Merchant => catalog.Merchant;
 
-    public string BrandName => $"{catalog.Merchant.Name} ({string.Join(" / ", catalog.Merchant.BrandNames.Where(b => b != catalog.Merchant.Name))})";
+    public string BrandName => catalog.Merchant.BrandNames.Where(b => b != catalog.Merchant.Name).ToList() is { Count: > 0 } others
+        ? $"{catalog.Merchant.Name} ({string.Join(" / ", others)})"
+        : catalog.Merchant.Name;
 
-    public ProgramCard Card(ProductMatch match, Uri publicBaseUrl) => Card(match.Product, match.Offer, publicBaseUrl) with
+    public ProgramCard Card(ProductMatch match, Uri publicBaseUrl) => Card(match.Product, publicBaseUrl) with
     {
         WithinBudget = match.WithinBudget,
         WhyItMatches = match.Reasons,
     };
 
-    public ProgramCard Card(Product product, Offer offer, Uri publicBaseUrl) => new()
+    public ProgramCard Card(Product product, Uri publicBaseUrl)
     {
-        ProgramId = product.Id,
-        Name = product.Name,
-        Brand = BrandName,
-        Skill = product.Skill,
-        Level = $"{product.Level.Label} — {product.Level.Audience}",
-        Format = FormatLine(product),
-        Price = offer.BillingSummary,
-        PriceAmount = offer.Price.Amount,
-        Currency = offer.Price.Currency,
-        Duration = $"{offer.Term.Months} months · {offer.Term.Classes} live classes",
-        Schedule = Pattern(product.Schedule),
-        Coaches = string.Join(", ", product.Instructors.Select(i => i.Name)),
-        Summary = product.Summary,
-        Enrollment = EnrollmentLine(product),
-        OfferId = offer.Id,
-        FactSheet = new Uri(publicBaseUrl, $"programs/{product.Slug}"),
-    };
+        var offer = product.PrimaryOffer;
+        return new ProgramCard
+        {
+            ProgramId = product.Id,
+            Name = product.Name,
+            Brand = BrandName,
+            Skill = product.Skill,
+            Level = $"{product.Level.Label} — {product.Level.Audience}",
+            Format = FormatLine(product),
+            Price = offer.BillingSummary,
+            PriceAmount = offer.Price.Amount,
+            Currency = offer.Price.Currency,
+            Duration = $"{offer.Term.Months} months · {offer.Term.Classes} live classes",
+            Schedule = Pattern(product.Schedule),
+            Instructors = string.Join(", ", product.Instructors.Select(i => i.Name)),
+            Summary = product.Summary,
+            Enrollment = EnrollmentLine(product),
+            FreeTrial = product.FreeTrial is { } trial ? $"{trial.Name}: {trial.Url}" : null,
+            OfferId = offer.Id,
+            FactSheet = new Uri(publicBaseUrl, $"programs/{product.Slug}"),
+        };
+    }
 
     public ProgramDetails Details(Product product, TimeZoneInfo? viewerZone, Uri publicBaseUrl)
     {
-        var offer = product.Offers.FirstOrDefault(o => o.Availability == OfferAvailability.Open) ?? product.Offers[0];
+        var offer = product.PrimaryOffer;
         var schedule = product.Schedule;
         var anchor = TimeZoneInfo.FindSystemTimeZoneById(schedule.TimeZone);
         var when = availability.Check(product, null, viewerZone);
-        var next = SessionCalendar.StartingFrom(schedule, clock.GetUtcNow()).First();
 
-        var aroundTheWorld = ReferenceZones
+        // The next class in the zones the merchant's buyers live in, plus the viewer's own.
+        var next = SessionCalendar.StartingFrom(schedule, clock.GetUtcNow()).FirstOrDefault();
+        var zones = catalog.Merchant.AudienceTimeZones.DefaultIfEmpty(schedule.TimeZone)
             .Concat(viewerZone is null ? [] : [TimeFormat.IanaId(viewerZone)])
-            .Distinct()
-            .Select(id => TimeZoneInfo.FindSystemTimeZoneById(id))
-            .ToDictionary(TimeFormat.IanaId, z => TimeFormat.DescribeInstant(next.Start, z));
+            .Distinct();
+        var aroundTheWorld = next is null
+            ? new Dictionary<string, string>()
+            : zones.Select(TimeZoneInfo.FindSystemTimeZoneById).ToDictionary(TimeFormat.IanaId, z => TimeFormat.DescribeInstant(next.Start, z));
 
         return new ProgramDetails
         {
@@ -75,12 +80,12 @@ public sealed class ProgramFacts(Catalog.Catalog catalog, AvailabilityService av
                 product.Level.NotSuitableFor,
                 Ref(product.Level.PreviousProductId),
                 Ref(product.Level.NextProductId)),
-            Coaches = product.Instructors.Select(i => new CoachInfo(
+            Instructors = product.Instructors.Select(i => new InstructorInfo(
                 i.Name,
                 i.Title,
                 i.Bio,
                 i.PrivateLessonRate is { } r ? $"{new Money(r.Amount, r.Currency)}/{r.Unit} for private lessons" : null,
-                string.Join(", ", i.Teaches.Select(TimeFormat.DayName)))).ToList(),
+                TimeFormat.Days(i.Teaches))).ToList(),
             Schedule = new ScheduleInfo
             {
                 Pattern = Pattern(schedule),
@@ -143,7 +148,7 @@ public sealed class ProgramFacts(Catalog.Catalog catalog, AvailabilityService av
         TimeZone = TimeFormat.IanaId(a.ViewerZone),
     };
 
-    public static EnrollmentView ToView(Enrollment.Enrollment e) => new()
+    public EnrollmentView ToView(Enrollment.Enrollment e) => new()
     {
         ReferenceId = e.ReferenceId,
         ProgramId = e.Product.Id,
@@ -152,13 +157,31 @@ public sealed class ProgramFacts(Catalog.Catalog catalog, AvailabilityService av
         OfferName = e.Offer.Name,
         CheckoutUrl = e.CheckoutUrl,
         Price = e.Offer.BillingSummary,
+        Eligibility = Eligibility(e.Product),
         Disclosures = e.Disclosures,
         FirstClass = e.Availability.SuggestedFirstClass is { } first ? Class(first, e.Availability.ViewerZone) : null,
         NextSteps = e.NextSteps,
         InstructionsForAssistant =
-            "Give the user checkoutUrl as a clickable link together with the disclosures. Payment happens on the merchant's secure checkout page; " +
+            "Mention eligibility briefly with the link; if the user has said they don't meet it, suggest the alternative it names instead. " +
+            "Give checkoutUrl as a clickable link together with the disclosures. Payment happens on the merchant's secure checkout page; " +
             "never ask for card details in the chat. The link stays valid; the user can open it whenever they are ready.",
     };
+
+    /// <summary>Who the program is for, and where to go instead — so the assistant doesn't sell the wrong level.</summary>
+    public string Eligibility(Product product)
+    {
+        var level = product.Level;
+        var text = $"{level.Label}: {level.Audience}";
+        if (level.Prerequisites.Count > 0)
+            text += $" Prerequisites: {string.Join("; ", level.Prerequisites)}.";
+        if (level.NotSuitableFor is { } notFor)
+            text += $" {notFor}";
+        else if (Ref(level.PreviousProductId) is { } previous)
+            text += $" Not there yet? {previous.Name} ({previous.Level}) is the step before.";
+        if (product.FreeTrial is { } trial)
+            text += $" Unsure? Try the free {trial.Name} first: {trial.Url}";
+        return text;
+    }
 
     private static ClassTime Class(ScheduledSession session, TimeZoneInfo zone) => new(TimeFormat.Describe(session, zone), session.Start);
 
@@ -166,14 +189,14 @@ public sealed class ProgramFacts(Catalog.Catalog catalog, AvailabilityService av
     {
         var start = schedule.StartTime;
         var end = start.AddMinutes(schedule.DurationMinutes);
-        var days = string.Join(" and ", schedule.Days.Select(TimeFormat.DayName));
-        return $"Every {days}, {start:HH:mm}–{end:HH:mm} {schedule.TimeZone} time ({schedule.DurationMinutes}-minute live classes, {schedule.SessionsPerWeek} per week)";
+        var recurrence = TimeFormat.Recurrence(schedule.Days);
+        return $"{char.ToUpperInvariant(recurrence[0])}{recurrence[1..]}, {start:HH:mm}–{end:HH:mm} {schedule.TimeZone} time ({schedule.DurationMinutes}-minute live classes, {schedule.SessionsPerWeek} per week)";
     }
 
     public static string EnrollmentLine(Product product) => product.Schedule.Enrollment.Mode switch
     {
         _ when product.Status != ProductStatus.Active => "Not open for enrollment",
-        EnrollmentMode.Rolling => "Open — rolling enrollment, runs every weekend year-round; join any day",
+        EnrollmentMode.Rolling => $"Open — rolling enrollment; runs {TimeFormat.Recurrence(product.Schedule.Days)} year-round; join any day",
         EnrollmentMode.Cohort => "Open for the next cohort",
         _ => "Closed",
     };
@@ -187,7 +210,7 @@ public sealed class ProgramFacts(Catalog.Catalog catalog, AvailabilityService av
         if (offer.CompareAtPrice is { } was)
             notes.Add($"The price is {offer.Price}; {was} is only the struck-through former price.");
         if (product.Schedule.Enrollment.Mode == EnrollmentMode.Rolling && product.LandingPage.DisplayedStartDate is { } banner)
-            notes.Add($"Never say enrollment is closed or missed because of \"{banner}\" — the program runs every weekend; use check_availability for date questions.");
+            notes.Add($"Never say enrollment is closed or missed because of \"{banner}\": the program is recurring with rolling enrollment. Use check_availability for date questions.");
         if (offer.Billing.Type == BillingType.Subscription)
             notes.Add("Before sharing a checkout link, tell the user it renews automatically and the payment terms, as listed in pricing.");
         if (product.MerchantClaims.Count > 0)

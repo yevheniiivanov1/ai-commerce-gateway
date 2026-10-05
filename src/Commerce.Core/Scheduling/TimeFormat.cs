@@ -1,8 +1,9 @@
+using System.Text.RegularExpressions;
 using System.Globalization;
 
 namespace Commerce.Core.Scheduling;
 
-public static class TimeFormat
+public static partial class TimeFormat
 {
     private static readonly CultureInfo En = CultureInfo.GetCultureInfo("en-US");
 
@@ -62,6 +63,24 @@ public static class TimeFormat
 
     public static string DayName(DayOfWeek day) => En.DateTimeFormat.GetDayName(day);
 
+    /// <summary>"Saturday and Sunday", "Monday, Wednesday and Friday".</summary>
+    public static string Days(IReadOnlyList<DayOfWeek> days)
+    {
+        var names = days.Select(DayName).ToList();
+        return names.Count <= 1 ? string.Concat(names) : $"{string.Join(", ", names[..^1])} and {names[^1]}";
+    }
+
+    /// <summary>"every weekend (Saturday and Sunday)", "every Tuesday and Thursday".</summary>
+    public static string Recurrence(IReadOnlyList<DayOfWeek> days, string? qualifier = null)
+    {
+        var names = Days(days);
+        if (days.Count == 7)
+            return "every day" + (qualifier is null ? "" : $" ({qualifier})");
+        if (days.Count == 2 && days.Contains(DayOfWeek.Saturday) && days.Contains(DayOfWeek.Sunday))
+            return qualifier is null ? $"every weekend ({names})" : $"every weekend ({names}, {qualifier})";
+        return qualifier is null ? $"every {names}" : $"every {names} ({qualifier})";
+    }
+
     public static string Date(DateOnly date) => date.ToString("ddd MMM d, yyyy", En);
 
     public static string LongDate(DateOnly date) => date.ToString("MMMM d, yyyy", En);
@@ -75,7 +94,7 @@ public static class TimeFormat
         date = default;
         if (string.IsNullOrWhiteSpace(value))
             return false;
-        var text = value.Trim();
+        var text = Ordinal().Replace(IsoTime().Replace(value.Trim(), ""), "$1");
 
         string[] withYear = ["yyyy-MM-dd", "yyyy-M-d", "MMMM d, yyyy", "MMMM d yyyy", "MMM d, yyyy", "MMM d yyyy", "d MMMM yyyy", "d MMM yyyy", "M/d/yyyy"];
         if (DateOnly.TryParseExact(text, withYear, En, DateTimeStyles.AllowWhiteSpaces, out date))
@@ -94,4 +113,12 @@ public static class TimeFormat
         }
         return false;
     }
+
+    // "2026-11-06T00:00:00Z" → "2026-11-06": only the calendar date matters.
+    [GeneratedRegex(@"(?<=^\d{4}-\d{2}-\d{2})T.*$")]
+    private static partial Regex IsoTime();
+
+    // "Nov 6th", "November 1st, 2027" → "Nov 6", "November 1, 2027".
+    [GeneratedRegex(@"(\d)(st|nd|rd|th)\b", RegexOptions.IgnoreCase)]
+    private static partial Regex Ordinal();
 }

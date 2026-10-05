@@ -15,16 +15,22 @@ public static class JsonLd
 {
     private static readonly JsonSerializerOptions Indented = new() { WriteIndented = true, Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping };
 
-    public static string ForProduct(Catalog.Catalog catalog, Product product, DateTimeOffset now) =>
+    /// <param name="now">When set, the next class date is included; pages rendered per request pass it.</param>
+    public static string ForProduct(Catalog.Catalog catalog, Product product, DateTimeOffset? now) =>
         Prune(new JsonObject
         {
             ["@context"] = "https://schema.org",
             ["@graph"] = new JsonArray(Organization(catalog.Merchant), Course(catalog.Merchant, product, now), Faq(product)),
         }).ToJsonString(Indented);
 
-    /// <summary>The snippet a merchant pastes into their page head (e.g. Tilda → Page settings → HTML head).</summary>
-    public static string ScriptTag(Catalog.Catalog catalog, Product product, DateTimeOffset now) =>
-        $"<script type=\"application/ld+json\">\n{ForProduct(catalog, product, now)}\n</script>";
+    /// <summary>
+    /// A &lt;script&gt; block. With <paramref name="now"/> null it is the snippet a merchant pastes
+    /// into a page head once (Tilda → Page settings → HTML head), so it carries no date that would
+    /// go stale — the weekly schedule says everything.
+    /// </summary>
+    public static string ScriptTag(Catalog.Catalog catalog, Product product, DateTimeOffset? now) =>
+        // "</" inside the JSON must not close the script element early.
+        $"<script type=\"application/ld+json\">\n{ForProduct(catalog, product, now).Replace("</", "<\\/")}\n</script>";
 
     private static string OrgId(Merchant merchant) => new Uri(merchant.Website, "#organization").ToString();
 
@@ -40,10 +46,10 @@ public static class JsonLd
         ["sameAs"] = Array(merchant.RelatedSites.Select(u => u.ToString())),
     };
 
-    private static JsonObject Course(Merchant merchant, Product product, DateTimeOffset now)
+    private static JsonObject Course(Merchant merchant, Product product, DateTimeOffset? now)
     {
         var schedule = product.Schedule;
-        var next = SessionCalendar.StartingFrom(schedule, now).First();
+        var next = now is { } at ? SessionCalendar.StartingFrom(schedule, at).FirstOrDefault() : null;
         var anchor = TimeZoneInfo.FindSystemTimeZoneById(schedule.TimeZone);
 
         return new JsonObject
@@ -82,8 +88,8 @@ public static class JsonLd
                     ["endTime"] = schedule.StartTime.AddMinutes(schedule.DurationMinutes).ToString("HH:mm", CultureInfo.InvariantCulture),
                     ["duration"] = $"PT{schedule.DurationMinutes}M",
                     ["scheduleTimezone"] = schedule.TimeZone,
-                    // Next class, recomputed on every render — never a stale cohort date.
-                    ["startDate"] = DateOnly.FromDateTime(TimeZoneInfo.ConvertTime(next.Start, anchor).DateTime).ToString("yyyy-MM-dd", CultureInfo.InvariantCulture),
+                    // Next class, recomputed on every render; left out of the paste-once snippet.
+                    ["startDate"] = next is null ? null : DateOnly.FromDateTime(TimeZoneInfo.ConvertTime(next.Start, anchor).DateTime).ToString("yyyy-MM-dd", CultureInfo.InvariantCulture),
                 },
             }),
             ["offers"] = new JsonArray(product.Offers.Select(o => (JsonNode)Offer(merchant, product, o)).ToArray()),
@@ -128,22 +134,21 @@ public static class JsonLd
 
     private static JsonObject Faq(Product product)
     {
-        var offer = product.Offers[0];
+        var offer = product.PrimaryOffer;
         var schedule = product.Schedule;
-        var days = string.Join(" and ", schedule.Days.Select(TimeFormat.DayName));
         var qa = new List<(string Q, string A)>
         {
             ($"How much does the {product.ShortName} cost?",
                 $"{offer.BillingSummary}. That covers {offer.Term.Months} months and {offer.Term.Classes} live classes." +
                 (offer.CompareAtPrice is { } was ? $" {was} is the former price." : "")),
             ($"When are the {product.ShortName} classes?", Facts.ProgramFacts.Pattern(schedule) + "."),
-            ($"Can I join the {product.ShortName} after the date shown on the page?",
+            ($"When can I start the {product.ShortName}?",
                 schedule.Enrollment.Mode == EnrollmentMode.Rolling
-                    ? $"Yes. The club runs every {days}, year-round. Enroll on any day; session links arrive within {schedule.Enrollment.AccessLeadTimeHours} hours and you start the next weekend."
+                    ? $"Any time. It runs {TimeFormat.Recurrence(schedule.Days)}, year-round, with rolling enrollment; access arrives within {schedule.Enrollment.AccessLeadTimeHours} hours of enrolling and you join the next class."
                     : "Enrollment follows fixed cohort dates."),
             ($"Who is the {product.ShortName} for?", product.Level.Audience + (product.Level.NotSuitableFor is { } not ? " " + not : "")),
-            ($"Who coaches the {product.ShortName}?", string.Join(" ", product.Instructors.Select(i => $"{i.Title} {i.Name}: {i.Bio}"))),
-            ($"Is the {product.ShortName} on-ice or off-ice?", $"{Facts.ProgramFacts.FormatLine(product)}. You need: {string.Join(", ", product.Equipment).ToLowerInvariant()}."),
+            ($"Who teaches the {product.ShortName}?", string.Join(" ", product.Instructors.Select(i => $"{i.Title} {i.Name}" + (i.Bio is { } bio ? $": {bio}" : ".")))),
+            ($"What format is the {product.ShortName}?", $"{Facts.ProgramFacts.FormatLine(product)}." + (product.Equipment.Count > 0 ? $" You need: {string.Join(", ", product.Equipment).ToLowerInvariant()}." : "")),
         };
         if (offer.Billing.CancellationPolicy is { } cancel)
             qa.Add(("How do I cancel?", cancel + (offer.Billing.RefundPolicy is { } r ? " Refunds: " + r : "")));

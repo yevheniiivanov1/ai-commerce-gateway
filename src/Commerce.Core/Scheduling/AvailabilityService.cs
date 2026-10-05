@@ -36,96 +36,112 @@ public sealed class AvailabilityService(TimeProvider clock)
         var anchorZone = TimeZoneInfo.FindSystemTimeZoneById(schedule.TimeZone);
         var zone = viewerZone ?? anchorZone;
         var now = clock.GetUtcNow();
-        var today = DateOnly.FromDateTime(TimeZoneInfo.ConvertTime(now, zone).DateTime);
-        var offer = product.Offers[0];
+        var today = LocalDate(now, zone);
+        var leadTime = TimeSpan.FromHours(schedule.Enrollment.AccessLeadTimeHours);
 
         var open = product.Status == ProductStatus.Active
             && schedule.Enrollment.Mode != EnrollmentMode.Closed
             && product.Offers.Any(o => o.Availability == OfferAvailability.Open);
 
         var hasPassed = requestedDate < today;
-        var from = requestedDate is { } d && !hasPassed ? StartOfDay(d, zone) : now;
-        if (from < now)
-            from = now;
+        var dayStart = requestedDate is { } d && !hasPassed ? StartOfDay(d, zone) : now;
 
-        var upcoming = SessionCalendar.StartingFrom(schedule, from).Take(SessionsToShow).ToList();
-        var leadTime = TimeSpan.FromHours(schedule.Enrollment.AccessLeadTimeHours);
-        var earliest = SessionCalendar.StartingFrom(schedule, now + leadTime).FirstOrDefault();
-
-        var onRequestedDay = requestedDate is { } day && !hasPassed
-            ? upcoming.FirstOrDefault(s => LocalDate(s.Start, zone) == day)
+        // Whether the requested day has a class follows from the rule alone, not from whether that
+        // class is still ahead of us: "is there a class today?" at 6 pm is still "yes, at 7 am".
+        var classThatDay = requestedDate is { } day && !hasPassed
+            ? SessionCalendar.StartingFrom(schedule, dayStart).TakeWhile(s => LocalDate(s.Start, zone) <= day).FirstOrDefault()
             : null;
-        var suggested = new[] { upcoming.FirstOrDefault(), earliest }
-            .Where(s => s is not null)
-            .MaxBy(s => s!.Start);
+
+        var upcoming = SessionCalendar.StartingFrom(schedule, Max(now, dayStart)).Take(SessionsToShow).ToList();
+        var earliest = SessionCalendar.StartingFrom(schedule, now + leadTime).FirstOrDefault();
+        var first = open ? SessionCalendar.StartingFrom(schedule, Max(now + leadTime, dayStart)).FirstOrDefault() : null;
 
         var availability = new Availability
         {
             OpenForEnrollment = open,
             Mode = schedule.Enrollment.Mode,
             RequestedDate = requestedDate,
-            RequestedDateHasClass = onRequestedDay is not null,
+            RequestedDateHasClass = classThatDay is not null,
             RequestedDateHasPassed = hasPassed,
             UpcomingSessions = upcoming,
             EarliestFirstClass = earliest,
-            SuggestedFirstClass = open ? suggested : null,
-            EnrollBy = open && suggested is not null ? suggested.Start - leadTime : null,
-            TermEndsAround = open && suggested is not null
-                ? LocalDate(suggested.Start, zone).AddMonths(offer.Term.Months)
-                : null,
+            SuggestedFirstClass = first,
+            EnrollBy = first is not null ? first.Start - leadTime : null,
+            TermEndsAround = first is not null ? LocalDate(first.Start, zone).AddMonths(product.PrimaryOffer.Term.Months) : null,
             ViewerZone = zone,
             Explanation = "",
         };
-        return availability with { Explanation = Explain(product, availability, onRequestedDay, zone) };
+        return availability with { Explanation = Explain(product, availability, classThatDay, now, zone) };
     }
 
-    private static string Explain(Product product, Availability a, ScheduledSession? onRequestedDay, TimeZoneInfo zone)
+    private static string Explain(Product product, Availability a, ScheduledSession? classThatDay, DateTimeOffset now, TimeZoneInfo zone)
     {
         var schedule = product.Schedule;
-        var days = string.Join(" and ", schedule.Days.Select(TimeFormat.DayName));
+        var leadHours = schedule.Enrollment.AccessLeadTimeHours;
         var lines = new List<string>();
 
         if (!a.OpenForEnrollment)
-        {
-            lines.Add($"{product.Name} is not open for enrollment right now. Contact the merchant for the next opening.");
-            return string.Join(" ", lines);
-        }
+            return $"{product.Name} is not open for enrollment right now. Contact the merchant for the next opening.";
 
         lines.Add(schedule.Enrollment.Mode == EnrollmentMode.Rolling
-            ? $"Enrollment is open: {product.ShortName} runs every {days}, year-round, and you can join on any day."
+            ? $"Enrollment is open: {product.ShortName} runs {Recurrence(schedule, zone, now)}, year-round, and you can join on any day."
             : $"Enrollment is open for {product.ShortName}.");
 
-        if (a.RequestedDate is { } requested)
+        var nearest = string.Join(" and ", a.UpcomingSessions.Take(2).Select(s => TimeFormat.Describe(s, zone)));
+        switch (a.RequestedDate)
         {
-            var requestedText = TimeFormat.LongDate(requested);
-            if (a.RequestedDateHasPassed)
-                lines.Add($"{requestedText} has already passed; the next classes are listed below.");
-            else if (onRequestedDay is not null)
-                lines.Add($"There is a class on {requestedText}: {TimeFormat.Describe(onRequestedDay, zone)}.");
-            else
-            {
-                var nearest = string.Join(" and ", a.UpcomingSessions.Take(2).Select(s => TimeFormat.Describe(s, zone)));
-                lines.Add($"{requestedText} is a {TimeFormat.DayName(requested.DayOfWeek)}, so there is no class that day. The nearest classes are {nearest}.");
-            }
-
-            if (onRequestedDay is not null && a.SuggestedFirstClass is { } first && first.Start > onRequestedDay.Start)
-                lines.Add($"That class starts less than {schedule.Enrollment.AccessLeadTimeHours} hours from now, so the first class a new member is guaranteed to get links for is {TimeFormat.Describe(first, zone)}.");
+            case null:
+                lines.Add($"The next classes are {nearest}.");
+                break;
+            case { } requested when a.RequestedDateHasPassed:
+                lines.Add($"{TimeFormat.LongDate(requested)} has already passed. The next classes are {nearest}.");
+                break;
+            case { } requested when classThatDay is null:
+                lines.Add($"{TimeFormat.LongDate(requested)} is a {TimeFormat.DayName(requested.DayOfWeek)}, so there is no class that day. The nearest classes are {nearest}.");
+                break;
+            case { } requested:
+                var theClass = $"The class on {TimeFormat.LongDate(requested)} ({TimeFormat.Describe(classThatDay, zone)})";
+                lines.Add(classThatDay.End <= now ? $"{theClass} has already taken place."
+                    : classThatDay.Start <= now ? $"{theClass} is already under way."
+                    : classThatDay.Start - now < TimeSpan.FromHours(leadHours) ? $"{theClass} starts in less than {leadHours} hours, too soon for a new member to receive the session links."
+                    : $"There is a class on {TimeFormat.LongDate(requested)}: {TimeFormat.Describe(classThatDay, zone)}.");
+                break;
         }
 
-        if (a.SuggestedFirstClass is not null && a.EnrollBy is { } enrollBy)
-            lines.Add($"Enroll by {TimeFormat.DescribeInstant(enrollBy, zone)} to start then — session links arrive within {schedule.Enrollment.AccessLeadTimeHours} hours of payment.");
+        if (a.SuggestedFirstClass is { } first && a.EnrollBy is { } enrollBy)
+            lines.Add($"To start with the class on {TimeFormat.Describe(first, zone)}, enroll by {TimeFormat.DescribeInstant(enrollBy, zone)}; session links arrive within {leadHours} hours of payment.");
 
         if (a.TermEndsAround is { } end)
         {
-            var offer = product.Offers[0];
-            lines.Add($"A {offer.Term.Months}-month term from that start runs until about {TimeFormat.Date(end)} ({offer.Term.Classes} classes).");
+            var term = product.PrimaryOffer.Term;
+            lines.Add($"A {term.Months}-month term from that start runs until about {TimeFormat.Date(end)} ({term.Classes} classes).");
         }
 
         if (product.LandingPage.DisplayedStartDate is { } banner)
-            lines.Add($"The \"{banner}\" banner on the landing page only names the next weekend at the time the page was edited; it is not a deadline.");
+            lines.Add($"The \"{banner}\" banner on the landing page only names an upcoming session at the time the page was edited; it is not a deadline.");
 
         return string.Join(" ", lines);
     }
+
+    /// <summary>
+    /// "every weekend (Saturday and Sunday)", plus the viewer's own weekdays when the organiser's
+    /// days land on different ones for them (a Saturday 7 am Pacific class is a Sunday in Auckland).
+    /// </summary>
+    public static string Recurrence(RecurringSchedule schedule, TimeZoneInfo viewer, DateTimeOffset now)
+    {
+        var anchor = TimeZoneInfo.FindSystemTimeZoneById(schedule.TimeZone);
+        var localDay = SessionCalendar.StartingFrom(schedule, now)
+            .Take(schedule.Days.Count)
+            .ToDictionary(s => TimeZoneInfo.ConvertTime(s.Start, anchor).DayOfWeek, s => TimeZoneInfo.ConvertTime(s.Start, viewer).DayOfWeek);
+        var viewerDays = schedule.Days.Select(d => localDay.GetValueOrDefault(d, d)).ToList();
+
+        var qualifier = viewerDays.SequenceEqual(schedule.Days)
+            ? null
+            : $"{TimeFormat.IanaId(anchor)} time; {TimeFormat.Days(viewerDays)} in {TimeFormat.IanaId(viewer)}";
+        return TimeFormat.Recurrence(schedule.Days, qualifier);
+    }
+
+    private static DateTimeOffset Max(DateTimeOffset a, DateTimeOffset b) => a > b ? a : b;
 
     private static DateTimeOffset StartOfDay(DateOnly date, TimeZoneInfo zone)
     {

@@ -18,6 +18,27 @@ public class CheckoutTests
             url.AbsoluteUri);
     }
 
+    [Theory]
+    [InlineData("perplexity", "ai-assistant")]
+    [InlineData("web", "referral")]
+    [InlineData("link", "referral")]
+    public void Only_assistant_traffic_is_tagged_as_coming_from_an_assistant(string channel, string medium)
+    {
+        var offer = _catalog.FindOffer("vsa-double-axel-club-6m")!.Value.Offer;
+
+        var url = TestCatalog.Providers().CreateCheckoutUrl(offer, new CheckoutContext("enr_1", channel));
+
+        Assert.Contains($"utm_medium={medium}&", url.Query);
+    }
+
+    [Theory]
+    [InlineData(29900, "USD", 299)]
+    [InlineData(45000, "JPY", 45000)]
+    public void Webhook_amounts_respect_zero_decimal_currencies(long minor, string currency, decimal expected)
+    {
+        Assert.Equal(expected, new CompletedCheckout("enr_1", minor, currency, "paid").AmountTotal);
+    }
+
     [Fact]
     public void Existing_query_strings_are_preserved()
     {

@@ -64,8 +64,16 @@ public sealed class EnrollmentService(
                 ? Fail(EnrollmentError.NotOpen, $"{product.Name} has no offer open for enrollment right now.")
                 : Fail(EnrollmentError.UnknownOffer, $"{product.Name} has no offer '{request.OfferId}'. Available: {string.Join(", ", product.Offers.Select(o => o.Id))}.");
 
+        if (offer.Availability != OfferAvailability.Open)
+        {
+            var openOffers = product.Offers.Where(o => o.Availability == OfferAvailability.Open).Select(o => o.Id).ToList();
+            var state = offer.Availability == OfferAvailability.SoldOut ? "sold out" : "paused";
+            return Fail(EnrollmentError.NotOpen, $"The {offer.Name} of {product.Name} is {state}. " +
+                (openOffers.Count > 0 ? $"Open offers: {string.Join(", ", openOffers)}." : "No offer is open right now."));
+        }
+
         var when = availability.Check(product, request.PreferredStartDate, request.ViewerZone);
-        if (!when.OpenForEnrollment || offer.Availability != OfferAvailability.Open)
+        if (!when.OpenForEnrollment)
             return Fail(EnrollmentError.NotOpen, when.Explanation);
 
         var referenceId = NewReferenceId();

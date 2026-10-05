@@ -18,7 +18,8 @@ if (Environment.GetEnvironmentVariable("PORT") is { Length: > 0 } port)
     builder.WebHost.UseUrls($"http://+:{port}");
 
 builder.Services.Configure<GatewayOptions>(builder.Configuration.GetSection(GatewayOptions.Section));
-var options = builder.Configuration.GetSection(GatewayOptions.Section).Get<GatewayOptions>() ?? new GatewayOptions();
+builder.Services.PostConfigure<GatewayOptions>(o => o.Normalize());
+var options = (builder.Configuration.GetSection(GatewayOptions.Section).Get<GatewayOptions>() ?? new GatewayOptions()).Normalize();
 
 // Checkout platforms. A new platform is one more ICheckoutProvider; offers name theirs in the catalog.
 ICheckoutProvider[] checkoutProviders = [new StripePaymentLinkProvider(), new PlainLinkProvider()];
@@ -48,12 +49,17 @@ builder.Services.AddScoped<Storefront>();
 builder.Services
     .AddMcpServer(mcp =>
     {
-        mcp.ServerInfo = new() { Name = $"{catalog.Merchant.Id}-commerce", Title = $"{catalog.Merchant.Name} programs & enrollment", Version = "1.0.0" };
-        mcp.ServerInstructions = ServerInstructions.For(catalog.Merchant);
+        mcp.ServerInfo = new()
+        {
+            Name = $"{catalog.Merchant.Id}-commerce",
+            Title = $"{catalog.Merchant.Name} programs & enrollment" + (options.PublicNotice is null ? "" : " (prototype)"),
+            Version = "1.0.0",
+        };
+        mcp.ServerInstructions = ServerInstructions.For(catalog, options.PublicNotice);
     })
     // Stateless: no session affinity, so the gateway scales out behind any load balancer.
     .WithHttpTransport(http => http.Stateless = true)
-    .WithTools<CommerceTools>();
+    .WithTools(CommerceTools.Create(catalog));
 
 builder.Services.AddOpenApi(o => o.AddDocumentTransformer((doc, _, _) =>
 {

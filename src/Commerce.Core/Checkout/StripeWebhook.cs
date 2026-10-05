@@ -5,7 +5,19 @@ using System.Text.Json;
 
 namespace Commerce.Core.Checkout;
 
-public sealed record CompletedCheckout(string? ReferenceId, long? AmountTotalMinor, string? Currency, string? PaymentStatus);
+public sealed record CompletedCheckout(string? ReferenceId, long? AmountTotalMinor, string? Currency, string? PaymentStatus)
+{
+    public bool IsPaid => PaymentStatus is "paid" or "no_payment_required";
+
+    /// <summary>Stripe amounts are in the currency's smallest unit; a few currencies have no decimals.</summary>
+    public decimal? AmountTotal => AmountTotalMinor is { } minor && Currency is { } currency
+        ? ZeroDecimalCurrencies.Contains(currency) ? minor : minor / 100m
+        : null;
+
+    // https://docs.stripe.com/currencies#zero-decimal
+    private static readonly HashSet<string> ZeroDecimalCurrencies =
+        ["BIF", "CLP", "DJF", "GNF", "JPY", "KMF", "KRW", "MGA", "PYG", "RWF", "UGX", "VND", "VUV", "XAF", "XOF", "XPF"];
+}
 
 /// <summary>
 /// Verifies and reads Stripe's <c>checkout.session.completed</c> webhook — the moment an
@@ -47,12 +59,16 @@ public static class StripeWebhook
         return Convert.ToHexString(mac).ToLowerInvariant();
     }
 
-    /// <summary>Returns the completed session, or null for any other event type.</summary>
+    /// <summary>
+    /// Returns the finished session for <c>checkout.session.completed</c> and, for delayed payment
+    /// methods (bank debits), <c>checkout.session.async_payment_succeeded</c>; null for anything
+    /// else. Only a session whose <see cref="CompletedCheckout.IsPaid"/> is true is money received.
+    /// </summary>
     public static CompletedCheckout? ReadCompletedCheckout(string payload)
     {
         using var json = JsonDocument.Parse(payload);
         var root = json.RootElement;
-        if (root.GetProperty("type").GetString() != "checkout.session.completed")
+        if (root.GetProperty("type").GetString() is not ("checkout.session.completed" or "checkout.session.async_payment_succeeded"))
             return null;
 
         var session = root.GetProperty("data").GetProperty("object");

@@ -27,4 +27,12 @@ public sealed class GatewayOptions
 
     /// <summary>Shown on every human- and AI-readable page when set, e.g. "prototype, not affiliated".</summary>
     public string? PublicNotice { get; set; }
+
+    /// <summary>An empty value from configuration means "not set" (e.g. to switch the notice off).</summary>
+    public GatewayOptions Normalize()
+    {
+        if (string.IsNullOrWhiteSpace(PublicNotice))
+            PublicNotice = null;
+        return this;
+    }
 }
