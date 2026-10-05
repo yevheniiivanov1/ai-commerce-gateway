@@ -1,5 +1,23 @@
 # After: Perplexity with the gateway connected
 
+**Read this first.** Asking ordinary Perplexity the baseline questions again will give the same
+answers as before, and that is expected. Perplexity's own index changes only when the merchant
+serves the new data from `victoryskating.com` (the JSON-LD snippet from `/programs/{slug}/jsonld`
+pasted into each Tilda page, and `llms.txt` on the domain) and Perplexity recrawls it. This
+prototype runs on a third-party host and is deliberately `noindex`, so it can't change organic
+answers and shouldn't try to.
+
+The "after" therefore shows the two mechanisms the gateway adds, each in Perplexity where possible:
+
+1. **Perplexity reading the AI-ready layer.** The same questions, with the gateway's
+   `llms-full.txt` in context. This is what Perplexity will see once the merchant publishes the layer
+   on their domain. No tools are involved; the answer can still offer the checkout link from the
+   fact sheet.
+2. **An assistant acting through the MCP tools.** Search → availability → `start_enrollment` →
+   tracked redirect to Stripe → funnel. In Perplexity this needs a paid plan (custom connectors), so
+   it is shown with an MCP client against the live server, plus the end-to-end test that runs it on
+   every CI build.
+
 <!-- AFTER_RESULTS -->
 
 ## Reproduce it

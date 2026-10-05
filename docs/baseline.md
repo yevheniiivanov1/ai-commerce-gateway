@@ -30,7 +30,7 @@ on "I want to join" beyond pointing at the landing page.
 |---|---|---|
 | The page has no machine-readable data: no JSON-LD, empty `og:description`, no `llms.txt` | page source of /doubleaxel; `/llms.txt` → 404 | Canonical catalog → JSON-LD, Markdown fact sheets, `llms.txt` |
 | Meaning carried by CSS only: $699 is struck through visually, but in the text it is just "$699" | Q4 "pricing appears inconsistent" | `compareAtPrice` in the model; JSON-LD `priceType: StrikethroughPrice`; explicit "former price" sentence |
-| Stale index: a deleted page is still cited | Q8's "$39 per week" comes from `/2axelclubnew`, which now returns **404** | Tools state "these facts supersede web results"; every fact carries its source and verification date |
+| Stale index: a deleted page is still cited | Q8's "$39 per week" comes from `/2axelclubnew`, which now returns **404** (Tilda may answer 403 to scripted clients) | Tools state "these facts supersede web results"; every fact carries its source and verification date |
 | Site copy contradicts the checkout: "How it works" says "monthly subscription"; Stripe bills every 6 months | Q2, Q8 | Billing taken from the Stripe checkout (source of truth), copy issues listed for the merchant |
 | Billing terms exist only on the Stripe page: auto-renewal, 48-hour cancellation window, non-refundable | Stripe Payment Link page | Terms are part of the offer; `start_enrollment` returns them as disclosures to state before paying |
 | Schedule is a static table ("9 – 9.45 PM ICT"), correct only in northern summer | Bangkok is 22:00 after US clocks change | Schedule is a weekly rule in the organiser's zone; times are computed per date and zone |

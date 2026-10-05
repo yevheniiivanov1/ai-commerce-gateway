@@ -17,7 +17,7 @@ through Shopify.
 | Platform | Catalog source | Schedule / availability | Checkout | Payment signal back |
 |---|---|---|---|---|
 | **Custom site / Tilda** (this case) | curated JSON; optionally page scraping plus LLM extraction, **with merchant approval** before publish | recurring rule in the catalog | `stripe-payment-link` (implemented): Payment Link + `client_reference_id` + UTM | Stripe `checkout.session.completed` (implemented) |
-| **Shopify** | Storefront/Admin GraphQL: products, variants, prices; program facts (level, coach, schedule) in metafields | metafields, or the booking app's API | Storefront `cartCreate` with cart attributes carrying the reference → `cart.checkoutUrl`; or a cart permalink | `orders/create` webhook (cart attributes, UTM landing site) |
+| **Shopify** (programs sold as products) | Storefront/Admin GraphQL: products, variants, prices; program facts (level, instructors, schedule) in metafields. Physical goods need a second product type (variants, stock, shipping); see [README → Reuse](../README.md#reuse) | metafields, or the booking app's API | Storefront `cartCreate` with cart attributes carrying the reference → `cart.checkoutUrl`; or a cart permalink | `orders/create` webhook (cart attributes, UTM landing site) |
 | **WordPress + WooCommerce** | WooCommerce Store API `/wp-json/wc/store/v1/products`, or REST v3 | product meta, or a bookings plugin | `/checkout/?add-to-cart={id}` link, or Store API cart + checkout; reference in order meta | `order.created` / `order.updated` webhooks |
 | **Mindbody** | Public API: programs, class descriptions, services/contracts (pricing options) | **live** class schedule and capacity from the API instead of a rule | the studio's branded web link to the pricing option (in-API sales need stored-card/PCI handling, so they come later) | Mindbody webhooks (sales, client and booking events) |
 | **Fresha** | no open catalog API to rely on: services and prices from the venue's public booking page or a partner integration | Fresha booking widget | `link` provider (implemented): deep link to the service's booking page + UTM | Fresha reporting / partner integration |
@@ -58,7 +58,8 @@ Ordered by what I'd do first.
    handling idempotent by Stripe event id, use an outbox for anything downstream, and use the Stripe SDK
    for signature checks. Webhook secrets go into a secret store.
 5. **Abuse and security.** Rate-limit `/mcp` and `/api`, and cap `start_enrollment` per client (it is
-   side-effect-free but writes records). Add OAuth to the MCP server once there are per-user tools
+   side-effect-free but writes records). Set `PublicBaseUrl` and trust `X-Forwarded-*` only from the
+   platform's proxy addresses, not from anyone (the prototype accepts any). Add OAuth to the MCP server once there are per-user tools
    ("my enrollments", "cancel"). Keep the "no card details in chat" rule. Skaters are often minors: the
    flow deliberately collects no personal data in the conversation; the guardian pays on Stripe.
 6. **Subscription compliance.** Auto-renewal laws require clear disclosure before purchase. The
