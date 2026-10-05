@@ -1,0 +1,145 @@
+using System.Text.RegularExpressions;
+using Commerce.Core.Catalog;
+
+namespace Commerce.Core.Search;
+
+public sealed record SearchRequest(string? Query, decimal? MaxPrice, string? Currency);
+
+public sealed record ProductMatch(Product Product, Offer Offer, double Score, bool? WithinBudget, IReadOnlyList<string> Reasons);
+
+public sealed record SearchResult(IReadOnlyList<ProductMatch> Matches, bool QueryMatchedNothing);
+
+/// <summary>
+/// Deterministic keyword ranking over names, aliases, skills and keywords. A catalog of a few
+/// dozen products doesn't need embeddings, and exact phrase hits ("double axel" vs "axel") are
+/// what decides the ranking. Brand words are ignored: every product here belongs to the brand.
+/// </summary>
+public sealed partial class ProductSearch(Catalog.Catalog catalog)
+{
+    // Skating shorthand an assistant may pass through verbatim.
+    private static readonly (Regex Pattern, string Replacement)[] Synonyms =
+    [
+        (new Regex(@"\b(2a|2axel|2-axel|dbl axel)\b", RegexOptions.Compiled), "double axel"),
+        (new Regex(@"\b(3a|3axel)\b", RegexOptions.Compiled), "triple axel"),
+        (new Regex(@"\b1a\b", RegexOptions.Compiled), "axel"),
+        (new Regex(@"\bdoubles\b", RegexOptions.Compiled), "double jumps"),
+        (new Regex(@"\btriples\b", RegexOptions.Compiled), "triple jumps"),
+    ];
+
+    private static readonly HashSet<string> StopWords =
+    [
+        "a", "an", "the", "and", "or", "for", "to", "of", "in", "on", "my", "me", "i", "im", "is", "are", "do", "does",
+        "have", "has", "any", "anything", "want", "looking", "need", "can", "join", "improve", "help", "with", "under",
+        "program", "programs", "training", "train", "online", "class", "classes", "course", "club", "lessons", "months",
+        "month", "six", "6", "price", "cost", "much", "how", "what", "which", "offer", "offers", "there", "something",
+    ];
+
+    public SearchResult Search(SearchRequest request)
+    {
+        var brandWords = catalog.Merchant.BrandNames.Concat(catalog.Merchant.Aliases)
+            .SelectMany(Tokens).ToHashSet();
+        var query = Normalize(request.Query ?? "");
+        var terms = Tokens(query)
+            .Where(t => !StopWords.Contains(t) && !brandWords.Contains(t) && !t.All(char.IsDigit))
+            .Distinct()
+            .ToList();
+
+        var products = catalog.Listed.ToList();
+
+        // Words every product shares ("ice" from "off-ice", "jumps") say nothing about which one
+        // the skater means. Only meaningful with more than one product to tell apart.
+        var vocabularies = products.ToDictionary(p => p.Id, Vocabulary);
+        if (products.Count > 1)
+            terms.RemoveAll(t => vocabularies.Values.All(v => v.Contains(t)));
+
+        // Longest phrase wins: in "2axel club" → "double axel club", the Axel Club's own
+        // "axel club" is only a fragment of the Double Axel Club's name.
+        var phraseHits = products.SelectMany(Phrases).Where(p => ContainsPhrase(query, p)).ToHashSet();
+        phraseHits.RemoveWhere(p => phraseHits.Any(longer => longer.Length > p.Length && ContainsPhrase(longer, p)));
+
+        var matches = products
+            .Select(p => Score(p, vocabularies[p.Id], phraseHits, terms, request))
+            .ToList();
+
+        // Keep the clear winners: a "double axel" query shouldn't drag in every club that
+        // merely contains the word "double". No terms (e.g. "what does VSA offer?") lists everything.
+        var top = matches.Max(m => m.Score);
+        var anyHit = terms.Count == 0 || top > 0;
+        var cutoff = terms.Count == 0 || !anyHit ? double.MinValue : Math.Max(1, top * 0.4);
+        var ranked = matches
+            .Where(m => m.Score >= cutoff)
+            .OrderByDescending(m => m.WithinBudget != false)
+            .ThenByDescending(m => m.Score)
+            .ThenBy(m => m.Product.Level.Rank)
+            .ToList();
+
+        return new SearchResult(ranked, QueryMatchedNothing: !anyHit);
+    }
+
+    private static ProductMatch Score(Product product, HashSet<string> vocabulary, HashSet<string> phraseHits, List<string> terms, SearchRequest request)
+    {
+        var reasons = new List<string>();
+        double score = 0;
+
+        // Whole-phrase hits on the skill or a keyword dominate single-word overlap, so
+        // "double axel" ranks the Double Axel Club above the (single) Axel Club.
+        foreach (var phrase in Phrases(product).Where(phraseHits.Contains))
+        {
+            score += 5;
+            reasons.Add($"matches \"{phrase}\"");
+        }
+
+        var hits = terms.Where(vocabulary.Contains).ToList();
+        score += hits.Count;
+        if (hits.Count > 0 && reasons.Count == 0)
+            reasons.Add($"mentions {string.Join(", ", hits)}");
+
+        var offer = product.Offers.Where(o => o.Availability == OfferAvailability.Open).DefaultIfEmpty(product.Offers[0])
+            .MinBy(o => o.Price.Amount)!;
+        bool? withinBudget = null;
+        if (request.MaxPrice is { } max)
+        {
+            var currency = string.IsNullOrWhiteSpace(request.Currency) ? "USD" : request.Currency.ToUpperInvariant();
+            if (currency == offer.Price.Currency)
+            {
+                withinBudget = offer.Price.Amount <= max;
+                reasons.Add(withinBudget.Value
+                    ? FormattableString.Invariant($"{offer.Price} for {offer.Term.Months} months is within the {currency} {max:0.##} budget")
+                    : FormattableString.Invariant($"{offer.Price} for {offer.Term.Months} months is over the {currency} {max:0.##} budget"));
+            }
+            else
+            {
+                reasons.Add($"priced in {offer.Price.Currency}; can't compare with a {currency} budget");
+            }
+        }
+
+        return new ProductMatch(product, offer, score, withinBudget, reasons);
+    }
+
+    private static IEnumerable<string> Phrases(Product product) =>
+        product.Keywords.Append(product.Skill).Append(product.ShortName).Concat(product.Aliases)
+            .Select(Normalize).Where(p => p.Contains(' ')).Distinct();
+
+    private static HashSet<string> Vocabulary(Product product) =>
+        Tokens(string.Join(' ', product.Keywords.Append(product.Skill).Append(product.Name).Concat(product.Aliases))).ToHashSet();
+
+    private static string Normalize(string text)
+    {
+        var lower = NonWord().Replace(text.ToLowerInvariant().Replace("’", "'").Replace("'", ""), " ");
+        foreach (var (pattern, replacement) in Synonyms)
+            lower = pattern.Replace(lower, replacement);
+        return Spaces().Replace(lower, " ").Trim();
+    }
+
+    private static bool ContainsPhrase(string text, string phrase) =>
+        $" {text} ".Contains($" {phrase} ", StringComparison.Ordinal);
+
+    private static IEnumerable<string> Tokens(string text) =>
+        Normalize(text).Split(' ', StringSplitOptions.RemoveEmptyEntries);
+
+    [GeneratedRegex(@"[^a-z0-9]+")]
+    private static partial Regex NonWord();
+
+    [GeneratedRegex(@"\s+")]
+    private static partial Regex Spaces();
+}
