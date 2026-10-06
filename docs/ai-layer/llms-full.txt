@@ -1,0 +1,351 @@
+# Victory Skating (VSA)
+
+> Online figure skating academy (VSA) running live off-ice group classes and private lessons with international coaches, for skaters anywhere in the world. This file and the pages it links are generated from a catalog curated from the merchant's own pages and checkout; it supersedes older or deleted pages.
+
+Facts that apply to every program:
+
+- Programs are recurring with rolling enrollment — join any day. A start date printed on a landing page names the next session at the time of editing; it is not a deadline.
+- Every package also shows a struck-through former price; quote the current price.
+- Every package is a subscription billed every 6 months until cancelled.
+- Refund policy: Non-refundable.
+
+## Programs
+
+- [6-Month Axel Club](https://vsa-ai-gateway.onrender.com/programs/axel-club.md): Level 1, Axel (1A). $299 billed every 6 months until cancelled (auto-renews). Every weekend (Saturday and Sunday), 07:00–07:45 America/Los_Angeles time (45-minute live classes, 2 per week). Instructors: Diana.
+- [6-Month Double Jumps Club](https://vsa-ai-gateway.onrender.com/programs/double-jumps-club.md): Level 2, Double jumps (2S, 2T, 2Lo, 2F, 2Lz). $299 billed every 6 months until cancelled (auto-renews). Every weekend (Saturday and Sunday), 08:00–08:45 America/Los_Angeles time (45-minute live classes, 2 per week). Instructors: Diana, Marta.
+- [6-Month Double Axel Club](https://vsa-ai-gateway.onrender.com/programs/double-axel-club.md): Level 3, Double Axel (2A). $299 billed every 6 months until cancelled (auto-renews). Every weekend (Saturday and Sunday), 07:00–07:45 America/Los_Angeles time (45-minute live classes, 2 per week). Instructors: Marta.
+- [6-Month Triple Jumps Club](https://vsa-ai-gateway.onrender.com/programs/triple-jumps-club.md): Level 4, Triple jumps (3S, 3T, 3Lo, 3F, 3Lz). $299 billed every 6 months until cancelled (auto-renews). Every weekend (Saturday and Sunday), 07:00–07:45 America/Los_Angeles time (45-minute live classes, 2 per week). Instructors: Marta.
+
+## For AI agents
+
+- [MCP server](https://vsa-ai-gateway.onrender.com/mcp): Streamable HTTP, no auth. Tools: search_programs, get_program_details, check_availability, start_enrollment.
+- [OpenAPI](https://vsa-ai-gateway.onrender.com/openapi.json): the same operations as REST.
+- [Catalog JSON](https://vsa-ai-gateway.onrender.com/api/programs): all programs.
+
+## Optional
+
+- [Website](https://victoryskating.com/)
+- [Terms of service](https://vsaworld.com/terms-of-service/)
+- [Privacy policy](https://vsaworld.com/privacy-policy/)
+- Contact: info@vsaworld.com
+
+---
+
+# 6-Month Axel Club — Victory Skating (VSA)
+
+> Live online off-ice group program for mastering the single Axel: two 45-minute classes every Saturday and Sunday, 48 classes per 6-month term, $299.
+
+## Key facts
+
+- **Brand:** Victory Skating (VSA); also known as VSA, VSA World, Victory Sports Academy, Victory Skating Academy
+- **What it is:** Live online group classes, off-ice training for Axel (1A)
+- **Price:** $299 billed every 6 months until cancelled (auto-renews)
+- **Former price:** $699 is the struck-through former price shown on the landing page, not what the buyer pays.
+- **Term:** 6 months, 48 live classes (about $6.23 per class ($299 / 48 classes))
+- **Schedule:** Every weekend (Saturday and Sunday), 07:00–07:45 America/Los_Angeles time (45-minute live classes, 2 per week)
+- **Enrollment:** Open — rolling enrollment; runs every weekend (Saturday and Sunday) year-round; join any day
+- **Instructors:** Top Coach Diana (Saturday)
+- **Level:** Level 1 — Skaters working on the single Axel.
+- **Cancellation:** Cancel at least 48 hours before the next payment date via the Subscriptions link in your confirmation email.
+- **Refunds:** Non-refundable.
+
+## Next classes
+
+- Sat Oct 10, 2026 · 07:00–07:45 (America/Los_Angeles, UTC-07:00)
+- Sun Oct 11, 2026 · 07:00–07:45 (America/Los_Angeles, UTC-07:00)
+- Sat Oct 17, 2026 · 07:00–07:45 (America/Los_Angeles, UTC-07:00)
+- Sun Oct 18, 2026 · 07:00–07:45 (America/Los_Angeles, UTC-07:00)
+
+Next class in other time zones:
+
+- America/Los_Angeles: Sat Oct 10, 2026 07:00 (America/Los_Angeles, UTC-07:00)
+- America/Denver: Sat Oct 10, 2026 08:00 (America/Denver, UTC-06:00)
+- America/Chicago: Sat Oct 10, 2026 09:00 (America/Chicago, UTC-05:00)
+- America/New_York: Sat Oct 10, 2026 10:00 (America/New_York, UTC-04:00)
+- Europe/London: Sat Oct 10, 2026 15:00 (Europe/London, UTC+01:00)
+- Europe/Berlin: Sat Oct 10, 2026 16:00 (Europe/Berlin, UTC+02:00)
+- Asia/Bangkok: Sat Oct 10, 2026 21:00 (Asia/Bangkok, UTC+07:00)
+
+## What's included
+
+- 2 live group classes every weekend (Saturday and Sunday, 45 minutes each)
+- 48 live group classes over 6 months
+- Free 4-day training plan
+- $5 discount on your next private class
+- 2 free group-class passes for friends or relatives of any level
+- Structured progression for 6 full months
+
+## Program
+
+Level 1 of the VSA jump ladder. Focuses on mastering the Axel with proper technique, power and control: correct takeoff mechanics, safe rotation and a strong landing position off the ice, building a clean foundation for future double jumps.
+
+- **Technique development:** Proper entry positions and takeoff technique; Pre-rotation and lift; Controlled landings to prevent injury
+- **Power and explosiveness:** Plyometric training; Bounding drills; Core strengthening
+- **Rotational speed:** Off-ice spins; Double-revolution drills
+- **Progression:** Gradually harder drills; Transition towards double jumps
+
+**You need:** Sneakers, Jump rope, Off-ice spinner, Stable internet connection, Some space to jump.
+
+## Instructors
+
+- **Top Coach Diana** (Saturday). American figure skating coach with international experience across the U.S., UK, Hong Kong, Germany and Poland. USFS-compliant for 2025/26, holds a UK Level 2 Coach Certification, and previously toured with Disney on Ice and Ice Capades.
+
+## Merchant claims
+
+- 73% of skaters land their Axel within 5 weeks.
+
+## How to enroll
+
+Enrollment is open. **Checkout:** https://vsa-ai-gateway.onrender.com/checkout/vsa-axel-club-6m — the merchant's secure checkout ($299 billed every 6 months until cancelled (auto-renews)).
+
+Before paying: Cancel at least 48 hours before the next payment date via the Subscriptions link in your confirmation email. Refunds: Non-refundable.
+
+Landing page: https://victoryskating.com/axel. AI assistants with tools: call start_enrollment (MCP) for a link tied to the conversation.
+
+Contact: info@vsaworld.com · https://victoryskating.com/
+
+_Last verified 2026-10-05 against: https://victoryskating.com/axel, https://buy.stripe.com/4gM5kD0Q30OE9lw10rdMM1C._
+
+---
+
+# 6-Month Double Jumps Club — Victory Skating (VSA)
+
+> Live online off-ice group program for the double salchow, toe loop, loop, flip and lutz: two 45-minute classes every Saturday and Sunday, 48 classes per 6-month term, $299.
+
+## Key facts
+
+- **Brand:** Victory Skating (VSA); also known as VSA, VSA World, Victory Sports Academy, Victory Skating Academy
+- **What it is:** Live online group classes, off-ice training for Double jumps (2S, 2T, 2Lo, 2F, 2Lz)
+- **Price:** $299 billed every 6 months until cancelled (auto-renews)
+- **Former price:** $699 is the struck-through former price shown on the landing page, not what the buyer pays.
+- **Term:** 6 months, 48 live classes (about $6.23 per class ($299 / 48 classes))
+- **Schedule:** Every weekend (Saturday and Sunday), 08:00–08:45 America/Los_Angeles time (45-minute live classes, 2 per week)
+- **Enrollment:** Open — rolling enrollment; runs every weekend (Saturday and Sunday) year-round; join any day
+- **Instructors:** Top Coach Diana (Saturday); Coach Marta (Sunday)
+- **Level:** Level 2 — Skaters ready to make the leap to double jumps (double salchow, toe loop, loop, flip and lutz).
+- **Cancellation:** Cancel at least 48 hours before the next payment date via the Subscriptions link in your confirmation email.
+- **Refunds:** Non-refundable.
+- **About the date on the landing page:** "Join us on October 10" on the landing page: Marketing label naming the next upcoming weekend. Not an enrollment deadline: the club runs every weekend.
+
+## Next classes
+
+- Sat Oct 10, 2026 · 08:00–08:45 (America/Los_Angeles, UTC-07:00)
+- Sun Oct 11, 2026 · 08:00–08:45 (America/Los_Angeles, UTC-07:00)
+- Sat Oct 17, 2026 · 08:00–08:45 (America/Los_Angeles, UTC-07:00)
+- Sun Oct 18, 2026 · 08:00–08:45 (America/Los_Angeles, UTC-07:00)
+
+Next class in other time zones:
+
+- America/Los_Angeles: Sat Oct 10, 2026 08:00 (America/Los_Angeles, UTC-07:00)
+- America/Denver: Sat Oct 10, 2026 09:00 (America/Denver, UTC-06:00)
+- America/Chicago: Sat Oct 10, 2026 10:00 (America/Chicago, UTC-05:00)
+- America/New_York: Sat Oct 10, 2026 11:00 (America/New_York, UTC-04:00)
+- Europe/London: Sat Oct 10, 2026 16:00 (Europe/London, UTC+01:00)
+- Europe/Berlin: Sat Oct 10, 2026 17:00 (Europe/Berlin, UTC+02:00)
+- Asia/Bangkok: Sat Oct 10, 2026 22:00 (Asia/Bangkok, UTC+07:00)
+
+## What's included
+
+- 2 live group classes every weekend (Saturday and Sunday, 45 minutes each)
+- 48 live group classes over 6 months
+- Free 4-day training plan
+- $5 discount on your next private class
+- 2 free group-class passes for friends or relatives of any level
+- Structured progression for 6 full months
+- After completing the club: invitation to the Double Axel Club for the same flat fee
+
+## Program
+
+Level 2 of the VSA jump ladder. Covers take-off and landing technique, rotation control, off-ice conditioning (strength, flexibility, plyometrics) and injury prevention for all five double jumps. Completing it unlocks an invitation to the Double Axel Club for the same flat fee.
+
+- **Introduction to double jumps:** Double salchow; Double toe loop; Double loop, flip and lutz
+- **Core techniques:** Take-off technique; Landing technique; Rotation control
+- **Off-ice conditioning:** Strength training; Flexibility; Plyometric drills
+- **Safety and injury prevention:** Warm-ups and cool-downs; Ankle and knee strengthening
+
+**You need:** Sneakers, Jump rope, Off-ice spinner, Stable internet connection, Some space to jump.
+
+## Instructors
+
+- **Top Coach Diana** (Saturday). American figure skating coach with international experience across the U.S., UK, Hong Kong, Germany and Poland. USFS-compliant for 2025/26, holds a UK Level 2 Coach Certification, and previously toured with Disney on Ice and Ice Capades.
+- **Coach Marta** (Sunday). Figure skating coach with international experience as both a skater and a coach. Trained at MKS Axel Toruń in Poland and with Team Mayer-Virtanen in Finland. Holds a degree in Physical Education.
+
+## Merchant claims
+
+- Students improved their jump height by 22% and rotation control by 31% in 2 months.
+
+## How to enroll
+
+Enrollment is open. **Checkout:** https://vsa-ai-gateway.onrender.com/checkout/vsa-double-jumps-club-6m — the merchant's secure checkout ($299 billed every 6 months until cancelled (auto-renews)).
+
+Before paying: Cancel at least 48 hours before the next payment date via the Subscriptions link in your confirmation email. Refunds: Non-refundable.
+
+Landing page: https://victoryskating.com/doublejumps. AI assistants with tools: call start_enrollment (MCP) for a link tied to the conversation.
+
+Contact: info@vsaworld.com · https://victoryskating.com/
+
+_Last verified 2026-10-05 against: https://victoryskating.com/doublejumps, https://buy.stripe.com/fZubJ16anape0P0eRhdMM1L._
+
+---
+
+# 6-Month Double Axel Club — Victory Skating (VSA)
+
+> Live online off-ice group program for skaters who already have their double jumps and are working on the Double Axel: two 45-minute classes every Saturday and Sunday with Coach Marta, 48 classes per 6-month term, $299.
+
+## Key facts
+
+- **Brand:** Victory Skating (VSA); also known as VSA, VSA World, Victory Sports Academy, Victory Skating Academy
+- **What it is:** Live online group classes, off-ice training for Double Axel (2A)
+- **Price:** $299 billed every 6 months until cancelled (auto-renews)
+- **Former price:** $699 is the struck-through former price shown on the landing page, not what the buyer pays.
+- **Term:** 6 months, 48 live classes (about $6.23 per class ($299 / 48 classes))
+- **Schedule:** Every weekend (Saturday and Sunday), 07:00–07:45 America/Los_Angeles time (45-minute live classes, 2 per week)
+- **Enrollment:** Open — rolling enrollment; runs every weekend (Saturday and Sunday) year-round; join any day
+- **Instructors:** Coach Marta (Saturday and Sunday)
+- **Level:** Level 3 — Skaters who have achieved proficiency in double jumps off-ice and want to transition to the Double Axel.
+- **Not for:** Skaters who do not yet have consistent double jumps — they should start with the Double Jumps Club (Level 2).
+- **Cancellation:** Cancel at least 48 hours before the next payment date via the Subscriptions link in your confirmation email.
+- **Refunds:** Non-refundable.
+- **About the date on the landing page:** "Join us on October 10" on the landing page: Marketing label naming the next upcoming weekend at the time the page was edited. It is not an enrollment deadline or a fixed cohort start: the club runs every weekend.
+
+## Next classes
+
+- Sat Oct 10, 2026 · 07:00–07:45 (America/Los_Angeles, UTC-07:00)
+- Sun Oct 11, 2026 · 07:00–07:45 (America/Los_Angeles, UTC-07:00)
+- Sat Oct 17, 2026 · 07:00–07:45 (America/Los_Angeles, UTC-07:00)
+- Sun Oct 18, 2026 · 07:00–07:45 (America/Los_Angeles, UTC-07:00)
+
+Next class in other time zones:
+
+- America/Los_Angeles: Sat Oct 10, 2026 07:00 (America/Los_Angeles, UTC-07:00)
+- America/Denver: Sat Oct 10, 2026 08:00 (America/Denver, UTC-06:00)
+- America/Chicago: Sat Oct 10, 2026 09:00 (America/Chicago, UTC-05:00)
+- America/New_York: Sat Oct 10, 2026 10:00 (America/New_York, UTC-04:00)
+- Europe/London: Sat Oct 10, 2026 15:00 (Europe/London, UTC+01:00)
+- Europe/Berlin: Sat Oct 10, 2026 16:00 (Europe/Berlin, UTC+02:00)
+- Asia/Bangkok: Sat Oct 10, 2026 21:00 (Asia/Bangkok, UTC+07:00)
+
+## What's included
+
+- 2 live group classes every weekend (Saturday and Sunday, 45 minutes each)
+- 48 live group classes over 6 months
+- Free 4-day Double Axel workbook (training plan)
+- $5 discount on your next private class
+- 2 free group-class passes for friends or relatives of any level
+- Structured progression for 6 full months
+- After completing the club: invitation to the Triple Jumps Club for the same flat fee
+
+## Program
+
+Level 3 of the VSA jump ladder. For skaters who are already proficient in double jumps off-ice and want to make the transition to the Double Axel off-ice, and to prepare for triple jumps. Classes are live and interactive and run from home; the program progresses from technique fundamentals through power, rotational speed and harder drills over six months.
+
+- **Technique development:** Correct approach and setup for a successful jump; Generating the rotation and height the Double Axel needs; Precise landings for stability and lower injury risk
+- **Power and explosiveness:** Plyometric training for takeoff strength; Bounding drills that mimic the Double Axel's explosive energy; Core strengthening to stabilise the rotation axis
+- **Rotational speed:** Off-ice spins for rotational control and speed; Double-revolution drills to build muscle memory
+- **Progression:** Starts with basic drills and increases difficulty as technique improves; Moves into more complex drills and introduces the transition to harder double jumps and triple jumps
+
+**You need:** Sneakers, Jump rope, Off-ice spinner, Stable internet connection, Some space to jump.
+
+## Instructors
+
+- **Coach Marta** (Saturday and Sunday). Figure skating coach with international experience as both a skater and a coach. Trained at MKS Axel Toruń in Poland and with Team Mayer-Virtanen in Finland. Holds a degree in Physical Education. $60/hour for private lessons.
+
+## Try it free
+
+[4-Day Double Axel Plan (free trial)](https://victoryskating.com/doubleaxelfreetrial) — Self-paced 4-day off-ice plan by VSA Head Coach Mary. No registration needed.
+
+## Merchant claims
+
+- Over 800 skaters reached their 2Axel — many in under 12 weeks.
+
+## How to enroll
+
+Enrollment is open. **Checkout:** https://vsa-ai-gateway.onrender.com/checkout/vsa-double-axel-club-6m — the merchant's secure checkout ($299 billed every 6 months until cancelled (auto-renews)).
+
+Before paying: Cancel at least 48 hours before the next payment date via the Subscriptions link in your confirmation email. Refunds: Non-refundable.
+
+Landing page: https://victoryskating.com/doubleaxel. AI assistants with tools: call start_enrollment (MCP) for a link tied to the conversation.
+
+Contact: info@vsaworld.com · https://victoryskating.com/
+
+_Last verified 2026-10-05 against: https://victoryskating.com/doubleaxel, https://buy.stripe.com/14AeVd6anbti69kcJ9dMM1M, https://victoryskating.com/doubleaxelfreetrial._
+
+---
+
+# 6-Month Triple Jumps Club — Victory Skating (VSA)
+
+> Live online off-ice group program for triple jumps with Coach Marta: two 45-minute classes every Saturday and Sunday, 48 classes per 6-month term, $299.
+
+## Key facts
+
+- **Brand:** Victory Skating (VSA); also known as VSA, VSA World, Victory Sports Academy, Victory Skating Academy
+- **What it is:** Live online group classes, off-ice training for Triple jumps (3S, 3T, 3Lo, 3F, 3Lz)
+- **Price:** $299 billed every 6 months until cancelled (auto-renews)
+- **Former price:** $699 is the struck-through former price shown on the landing page, not what the buyer pays.
+- **Term:** 6 months, 48 live classes (about $6.23 per class ($299 / 48 classes))
+- **Schedule:** Every weekend (Saturday and Sunday), 07:00–07:45 America/Los_Angeles time (45-minute live classes, 2 per week)
+- **Enrollment:** Open — rolling enrollment; runs every weekend (Saturday and Sunday) year-round; join any day
+- **Instructors:** Coach Marta (Saturday and Sunday)
+- **Level:** Level 4 — Skaters ready to work on triple jumps off-ice, typically after the Double Axel Club.
+- **Cancellation:** Cancel at least 48 hours before the next payment date via the Subscriptions link in your confirmation email.
+- **Refunds:** Non-refundable.
+- **About the date on the landing page:** "Join us on October 10" on the landing page: Marketing label naming the next upcoming weekend. Not an enrollment deadline: the club runs every weekend.
+
+## Next classes
+
+- Sat Oct 10, 2026 · 07:00–07:45 (America/Los_Angeles, UTC-07:00)
+- Sun Oct 11, 2026 · 07:00–07:45 (America/Los_Angeles, UTC-07:00)
+- Sat Oct 17, 2026 · 07:00–07:45 (America/Los_Angeles, UTC-07:00)
+- Sun Oct 18, 2026 · 07:00–07:45 (America/Los_Angeles, UTC-07:00)
+
+Next class in other time zones:
+
+- America/Los_Angeles: Sat Oct 10, 2026 07:00 (America/Los_Angeles, UTC-07:00)
+- America/Denver: Sat Oct 10, 2026 08:00 (America/Denver, UTC-06:00)
+- America/Chicago: Sat Oct 10, 2026 09:00 (America/Chicago, UTC-05:00)
+- America/New_York: Sat Oct 10, 2026 10:00 (America/New_York, UTC-04:00)
+- Europe/London: Sat Oct 10, 2026 15:00 (Europe/London, UTC+01:00)
+- Europe/Berlin: Sat Oct 10, 2026 16:00 (Europe/Berlin, UTC+02:00)
+- Asia/Bangkok: Sat Oct 10, 2026 21:00 (Asia/Bangkok, UTC+07:00)
+
+## What's included
+
+- 2 live group classes every weekend (Saturday and Sunday, 45 minutes each)
+- 48 live group classes over 6 months
+- Free 4-day training plan
+- $5 discount on your next private class
+- 2 free group-class passes for friends or relatives of any level
+- Structured progression for 6 full months
+
+## Program
+
+Level 4 of the VSA jump ladder and the next step after the Double Axel Club. Introduces the triple salchow, toe loop, loop, flip and lutz, with plyometric power work, rotational-speed drills and a gradual progression in difficulty.
+
+- **Introduction to triple jumps:** Triple salchow; Triple toe loop; Triple loop, flip and lutz
+- **Power and explosiveness:** Plyometric training; Bounding drills; Core strengthening
+- **Rotational speed:** Off-ice spins; Triple-revolution drills
+- **Progression:** Gradually harder drills as technique improves
+
+**You need:** Sneakers, Jump rope, Off-ice spinner, Stable internet connection, Some space to jump.
+
+## Instructors
+
+- **Coach Marta** (Saturday and Sunday). Figure skating coach with international experience as both a skater and a coach. Trained at MKS Axel Toruń in Poland and with Team Mayer-Virtanen in Finland. Holds a degree in Physical Education. $60/hour for private lessons.
+
+## Merchant claims
+
+- Skaters training 2x/week are 65% more likely to land triple jumps clean.
+
+## How to enroll
+
+Enrollment is open. **Checkout:** https://vsa-ai-gateway.onrender.com/checkout/vsa-triple-jumps-club-6m — the merchant's secure checkout ($299 billed every 6 months until cancelled (auto-renews)).
+
+Before paying: Cancel at least 48 hours before the next payment date via the Subscriptions link in your confirmation email. Refunds: Non-refundable.
+
+Landing page: https://victoryskating.com/triplejumps. AI assistants with tools: call start_enrollment (MCP) for a link tied to the conversation.
+
+Contact: info@vsaworld.com · https://victoryskating.com/
+
+_Last verified 2026-10-05 against: https://victoryskating.com/triplejumps, https://buy.stripe.com/aFa8wP9mz54UbtEgZpdMM1t._
+
+_Prototype built for a hiring assignment. Not operated by or affiliated with Victory Skating / VSA. Product data captured from the merchant's public pages and checkout on 2026-10-05; enrollment links open VSA's own Stripe checkout._
