@@ -9,21 +9,46 @@ answers and shouldn't try to.
 
 The "after" therefore shows the two mechanisms the gateway adds, each in Perplexity where possible:
 
-1. **Perplexity reading the AI-ready layer.** The same questions, with the gateway's
-   `llms-full.txt` in context. This is what Perplexity will see once the merchant publishes the layer
-   on their domain. No tools are involved; the answer can still offer the checkout link from the
-   fact sheet.
+1. **Perplexity answering from the gateway's facts.** The brief's sales dialogue, with the
+   generated fact sheet in context: what Perplexity's retrieval will hand its model once the merchant
+   publishes the layer and it is indexed. No tools are involved; the answer still ends in the
+   checkout link from the fact sheet.
 2. **An assistant acting through the MCP tools.** Search → availability → `start_enrollment` →
    tracked redirect to Stripe → funnel. In Perplexity this needs a paid plan (custom connectors), so
    it is shown with an MCP client against the live server, plus the end-to-end test that runs it on
    every CI build.
 
-## 1. Perplexity reading the AI-ready layer
+## 1. Perplexity answering from the gateway's facts
 
-<!-- PERPLEXITY_AFTER -->
-_Pending._ Perplexity opens a URL named in the prompt only for signed-in users; signed out it
-answers "Sign up and repeat your request" (checked 2026-10-06). This part is run with a free
-account.
+**First attempt: point Perplexity at the live layer.** It doesn't work on the free plan, and the
+reason matters. Signed out, Perplexity refuses to open a URL from the prompt ("Sign up and repeat
+your request"). Signed in, it replies "The exact URL could not be retrieved directly" and answers from
+its index instead, which brings back the stale "$39 per week" offer. The gateway's read log
+(`/api/readers`) shows that no request from Perplexity ever arrived. A copy of the same file on GitHub
+fails the same way, while long-indexed pages such as Stripe's docs "work". The free plan answers
+from its index; it doesn't fetch new pages. That is also why organic answers change only after the
+merchant serves the layer from their own domain and Perplexity recrawls it.
+
+**So the indexed state is simulated.** The first message carries the generated fact sheet
+([`/programs/double-axel-club.md`](https://vsa-ai-gateway.onrender.com/programs/double-axel-club.md),
+verbatim apart from the time-zone table), which is what retrieval would hand the model. The brief's
+dialogue then runs in the same thread (perplexity.ai, free plan, signed in, 2026-10-06):
+
+| Turn | Perplexity today ([baseline](baseline.md)) | Perplexity with the gateway's facts |
+|---|---|---|
+| "I want to improve my Double Axel and I'm looking for an online program under $350." | $299 and nothing more; other threads say "$699 … pricing appears inconsistent" | the 6-Month Double Axel Club, "$299 for the six-month term — within your $350 limit"; a table with "$299 every 6 months, auto-renewing unless cancelled", Saturdays and Sundays 07:00–07:45 Pacific, Coach Marta, Level 3 entry requirement, about $6.23 per class; a fit check sending skaters without consistent doubles to the Double Jumps Club; the free 4-day plan |
+| "I'm free on November 6. Can I join the program around that time?" | "there should be sessions the following day", no times | "Yes … enrollment is rolling … there is no fixed cohort start or enrollment deadline"; November 6 is a Friday, so Saturday November 7 and Sunday November 8, 07:00–07:45 Pacific; "The 'Join us on October 10' wording is only a marketing label … not a cutoff date"; renewal and refund terms before enrolling |
+| "I want to join." | "purchase the monthly subscription", "$39 per week", a link to the landing page | "You can enroll directly through VSA's secure checkout … **start enrollment**", linking `/checkout/vsa-double-axel-club-6m` (→ the Stripe page above), with $299, renewal every six months, the 48-hour cancellation window and non-refundable payments |
+
+![Perplexity: program under $350](screenshots/after/perplexity-1-program-under-350.jpg)
+
+![Perplexity: November 6](screenshots/after/perplexity-2-november-6.jpg)
+
+![Perplexity: I want to join](screenshots/after/perplexity-3-i-want-to-join.jpg)
+
+The "start enrollment" link goes through the gateway's `/checkout` redirect. A click that arrives
+from perplexity.ai is attributed to channel `perplexity` by its Referer (covered by
+`A_plain_checkout_link_is_attributed_by_its_referrer`).
 
 ## 2. The tool flow, against the live server
 

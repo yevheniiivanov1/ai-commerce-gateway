@@ -254,7 +254,8 @@ script: [docs/after.md](docs/after.md#reproduce-it).
 
 - **The connector is not demonstrated inside Perplexity itself.** Custom MCP connectors need a paid
   Perplexity plan. The tool flow is proven by the end-to-end test and an MCP client against the live
-  server; the Perplexity "after" uses the crawlable layer (see [after](docs/after.md)).
+  server. Perplexity's free plan also won't fetch a new, unindexed page, so the Perplexity "after"
+  gives it the generated fact sheet in context (see [after](docs/after.md)).
 - **Organic Perplexity answers won't change** until the JSON-LD and `llms.txt` are served from
   `victoryskating.com` and Perplexity recrawls it. This copy is deliberately `noindex`.
 - **No persistence.** Enrollments and funnel events live in memory: fine for a demo, lost on restart.

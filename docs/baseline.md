@@ -4,7 +4,16 @@ Tested on **2026-10-05** in perplexity.ai, signed out (no personalisation, no co
 model. Every thread below is a public link, so the answers can be re-read as Perplexity gave them.
 Verbatim answers and the ground-truth check are in [baseline-raw.md](baseline-raw.md).
 
-![Q2 — "Does VSA offer online training for Double Axel?"](screenshots/before/q2-vsa-online-2a.jpg)
+Screenshots (English UI, re-taken 2026-10-06 from the same threads): the two most telling are below;
+all eight: [Q1](screenshots/before/q1-victory-skating-online-2a.jpg) ·
+[Q2](screenshots/before/q2-vsa-online-2a.jpg) · [Q3](screenshots/before/q3-under-350.jpg) ·
+[Q4](screenshots/before/q4-price-and-inclusions.jpg) · [Q5](screenshots/before/q5-can-i-join.jpg) ·
+[Q6](screenshots/before/q6-november-6.jpg) · [Q7](screenshots/before/q7-sales-flow.jpg) ·
+[Q8](screenshots/before/q8-enroll-and-pay.jpg).
+
+![Q4 — "How much is the Victory Skating / VSA Double Axel Club and what is included?"](screenshots/before/q4-price-and-inclusions.jpg)
+
+![Q8 — "I want to join the Victory Skating VSA Double Axel Club. How do I enroll and pay?"](screenshots/before/q8-enroll-and-pay.jpg)
 
 ## Results
 
