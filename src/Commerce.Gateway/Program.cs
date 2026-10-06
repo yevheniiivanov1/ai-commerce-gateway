@@ -37,6 +37,7 @@ builder.Services.AddSingleton(TimeProvider.System);
 builder.Services.AddSingleton(catalog);
 builder.Services.AddSingleton(providerRegistry);
 builder.Services.AddSingleton<IFunnelLog, InMemoryFunnelLog>();
+builder.Services.AddSingleton<ReaderLog>();
 builder.Services.AddSingleton<ProductSearch>();
 builder.Services.AddSingleton<AvailabilityService>();
 builder.Services.AddSingleton<ProgramFacts>();
@@ -79,6 +80,7 @@ builder.Services.Configure<ForwardedHeadersOptions>(o =>
 var app = builder.Build();
 
 app.UseForwardedHeaders();
+app.UseReaderLog();
 app.MapOpenApi();
 app.MapGet("/openapi.json", () => Results.Redirect("/openapi/v1.json")).ExcludeFromDescription();
 app.MapGet("/healthz", () => Results.Ok(new { status = "ok", catalog = catalog.Merchant.Id, products = catalog.Document.Products.Count }))
@@ -87,6 +89,7 @@ app.MapGet("/healthz", () => Results.Ok(new { status = "ok", catalog = catalog.M
 app.MapMcp("/mcp");
 app.MapCommerceApi();
 app.MapCheckout();
+app.MapReaderLog();
 app.MapDiscovery();
 
 app.Run();

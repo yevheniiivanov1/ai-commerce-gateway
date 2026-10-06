@@ -220,6 +220,20 @@ public class DiscoveryTests : IClassFixture<GatewayTests.Factory>
     }
 
     [Fact]
+    public async Task Reads_of_the_ai_surfaces_are_logged_with_the_client_that_made_them()
+    {
+        var http = _factory.CreateClient();
+        var request = new HttpRequestMessage(HttpMethod.Get, "/llms-full.txt");
+        request.Headers.UserAgent.ParseAdd("Perplexity-User/1.0");
+
+        await http.SendAsync(request, Ct);
+        var readers = await http.GetFromJsonAsync<JsonElement>("/api/readers", Ct);
+
+        Assert.Contains(readers.EnumerateArray(), r =>
+            r.GetProperty("path").GetString() == "/llms-full.txt" && r.GetProperty("userAgent").GetString() == "Perplexity-User/1.0");
+    }
+
+    [Fact]
     public async Task A_prototype_host_asks_not_to_be_indexed_and_says_what_it_is()
     {
         var http = _factory.CreateClient();
