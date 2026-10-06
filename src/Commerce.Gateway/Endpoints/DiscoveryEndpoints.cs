@@ -156,8 +156,8 @@ public static class DiscoveryEndpoints
         body.Append("<h2>Enroll</h2><ul>");
         foreach (var line in EnrollmentService.Disclosures(offer))
             body.Append($"<li>{HtmlEncode(line)}</li>");
-        // No channel parameter: the redirect attributes the click from its Referer (e.g. perplexity.ai).
-        body.Append($"</ul><p><a class=\"cta\" href=\"{HtmlEncode(p.Enrollment.CheckoutPage.ToString())}\">Enroll — {HtmlEncode(offer.BillingSummary)}</a></p>");
+        // People click this button, so no channel parameter: the redirect falls back to the Referer.
+        body.Append($"</ul><p><a class=\"cta\" href=\"/checkout/{Uri.EscapeDataString(offer.Id)}\">Enroll — {HtmlEncode(offer.BillingSummary)}</a></p>");
 
         body.Append($"<footer>Last verified {p.LastVerified:yyyy-MM-dd} against " +
             string.Join(", ", p.Sources.Select(s => $"<a href=\"{HtmlEncode(s.Url.ToString())}\">{HtmlEncode(s.Url.Host + s.Url.AbsolutePath)}</a>")) +
@@ -206,13 +206,13 @@ public static class DiscoveryEndpoints
         .cta { display:inline-block; background:var(--accent); color:var(--bg); padding:10px 18px; border-radius:8px; text-decoration:none; font-weight:600; }
         code { font-size:.9em; overflow-wrap:anywhere; }
         footer { margin-top:48px; color:var(--muted); font-size:.85rem; }
-        .notice { font-size:.85rem; color:var(--muted); border:1px dashed var(--line); border-radius:8px; padding:8px 12px; margin:0 0 20px; }
+        .notice { font-size:.8rem; color:var(--muted); margin:24px 0 0; padding-top:12px; border-top:1px solid var(--line); }
         @media (max-width:560px) { dl.facts { grid-template-columns:1fr; } h1 { font-size:1.6rem; } }
         </style>
         </head>
         <body><main>
-        {{(options.PublicNotice is { } notice ? $"<p class=\"notice\">{HtmlEncode(notice)}</p>" : "")}}
         {{body}}
+        {{(options.PublicNotice is { } notice ? $"<p class=\"notice\">{HtmlEncode(notice)}</p>" : "")}}
         </main></body>
         </html>
         """;

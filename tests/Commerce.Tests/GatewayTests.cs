@@ -246,7 +246,7 @@ public class DiscoveryTests : IClassFixture<GatewayTests.Factory>
         Assert.Contains("Not operated by or affiliated with Victory Skating", full);
         // One fetch carries every program, its checkout link and the billing terms.
         Assert.Contains("# 6-Month Triple Jumps Club", full);
-        Assert.Contains("**Checkout:** http://localhost/checkout/vsa-double-axel-club-6m", full);
+        Assert.Contains("**Checkout:** http://localhost/checkout/vsa-double-axel-club-6m?channel=ai-answer", full);
         Assert.Contains("Non-refundable", full);
     }
 }

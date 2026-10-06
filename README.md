@@ -184,9 +184,12 @@ sequenceDiagram
 - `/webhooks/stripe` verifies the signature and closes the loop, counting a payment only when Stripe
   reports it `paid` (bank debits confirm later, via `async_payment_succeeded`). `/api/funnel` shows the
   path, e.g. `EnrollmentStarted → CheckoutOpened → PaymentCompleted`, channel `perplexity`.
-- Plain links are attributed too: a click on the fact sheet's Enroll button arriving from
-  `perplexity.ai` is tagged `perplexity` from its Referer. Link-preview bots that unfurl a shared link
-  are redirected but not counted.
+- Plain links are attributed too. Checkout links in the AI-readable layer (`llms.txt`, Markdown
+  fact sheets, `checkoutPage`) carry `channel=ai-answer`, because assistants often open links without
+  a Referer: a click on the link in Perplexity's answer arrived with none (verified on the live
+  server). A click on the HTML fact sheet's button is attributed from its Referer when there is one.
+  Only the MCP path knows *which* assistant sent the buyer. Link-preview bots that unfurl a shared
+  link are redirected but not counted.
 - The redirect hop also keeps links working that an assistant already handed out, even if the
   merchant later moves to another payment platform.
 
@@ -240,7 +243,8 @@ docker run -p 8080:8080 -e Gateway__PublicBaseUrl=https://your.host/ ai-commerce
 Settings (`Gateway__*` environment variables): `CatalogPath`, `PublicBaseUrl`,
 `StripeWebhookSecret` (webhooks are refused without it), `ExposeFunnel`, `AllowIndexing` (off: a
 third-party copy of a merchant's pages is `noindex`), `PublicNotice` (the "prototype, not affiliated"
-line shown on every page and in the MCP instructions; empty to disable).
+line at the foot of every page and in the MCP instructions; empty to disable, e.g. when the merchant
+runs the gateway on their own domain).
 
 The public instance runs on Render's free tier, which sleeps after 15 minutes idle: **the first
 request after a pause can take up to a minute**, and the in-memory funnel starts empty after each

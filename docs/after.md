@@ -46,9 +46,11 @@ dialogue then runs in the same thread (perplexity.ai, free plan, signed in, 2026
 
 ![Perplexity: I want to join](screenshots/after/perplexity-3-i-want-to-join.jpg)
 
-The "start enrollment" link goes through the gateway's `/checkout` redirect. A click that arrives
-from perplexity.ai is attributed to channel `perplexity` by its Referer (covered by
-`A_plain_checkout_link_is_attributed_by_its_referrer`).
+Clicking "start enrollment" in that answer went through the gateway's `/checkout` redirect to the
+Stripe page and was recorded as `CheckoutOpened`. It arrived **without a Referer**, because Perplexity
+opens answer links with `noreferrer`, so it was counted as a plain `link` click. Checkout links in
+the AI-readable layer now carry `channel=ai-answer`, so such clicks count as AI traffic. Only the
+MCP path, via the client's identity, knows *which* assistant it was.
 
 ## 2. The tool flow, against the live server
 

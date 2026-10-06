@@ -7,6 +7,9 @@ namespace Commerce.Core.Facts;
 /// <summary>Projects catalog entries into the AI-facing views.</summary>
 public sealed class ProgramFacts(Catalog.Catalog catalog, AvailabilityService availability, TimeProvider clock)
 {
+    /// <summary>Channel for checkout links an assistant copied out of the AI-readable layer.</summary>
+    public const string AiAnswerChannel = "ai-answer";
+
     public Merchant Merchant => catalog.Merchant;
 
     public string BrandName => catalog.Merchant.BrandNames.Where(b => b != catalog.Merchant.Name).ToList() is { Count: > 0 } others
@@ -118,7 +121,9 @@ public sealed class ProgramFacts(Catalog.Catalog catalog, AvailabilityService av
             {
                 Status = when.OpenForEnrollment ? "open" : "closed",
                 OfferId = offer.Id,
-                CheckoutPage = new Uri(publicBaseUrl, $"checkout/{Uri.EscapeDataString(offer.Id)}"),
+                // Read by assistants, not people: tag the link, because assistants often open links
+                // without a Referer (Perplexity does), which would make the click look like direct traffic.
+                CheckoutPage = new Uri(publicBaseUrl, $"checkout/{Uri.EscapeDataString(offer.Id)}?channel={AiAnswerChannel}"),
                 HowToEnroll = "Open checkoutPage to pay on the merchant's secure checkout. Assistants with tools: call start_enrollment (MCP) or POST /api/enrollments for a link tied to this conversation.",
                 LandingPage = product.LandingPage.Url,
                 LandingPageDateNote = product.LandingPage.DisplayedStartDate is { } banner
