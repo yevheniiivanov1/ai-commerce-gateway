@@ -8,3 +8,7 @@ services:
     dockerfilePath: ./Dockerfile
     healthCheckPath: /healthz
     autoDeploy: true
+    envVars:
+      # Absolute links in tool results; without it they follow the proxy's X-Forwarded-Host.
+      - key: Gateway__PublicBaseUrl
+        value: https://vsa-ai-gateway.onrender.com/

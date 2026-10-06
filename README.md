@@ -12,8 +12,8 @@ from a Tilda landing page with a Stripe Payment Link, and makes it:
 
 | | |
 |---|---|
-| Live gateway | `<PUBLIC_URL>` — fact sheet: `<PUBLIC_URL>/programs/double-axel-club` |
-| MCP endpoint (Perplexity custom connector) | `<PUBLIC_URL>/mcp` — Streamable HTTP, no auth |
+| Live gateway | https://vsa-ai-gateway.onrender.com — fact sheet: https://vsa-ai-gateway.onrender.com/programs/double-axel-club (free tier: the first request after a pause can take up to a minute) |
+| MCP endpoint (Perplexity custom connector) | `https://vsa-ai-gateway.onrender.com/mcp` — Streamable HTTP, no auth |
 | Before (Perplexity today) | [docs/baseline.md](docs/baseline.md) |
 | After (Perplexity + this gateway) | [docs/after.md](docs/after.md) |
 | Other platforms, production plan | [docs/integrations.md](docs/integrations.md) |
@@ -220,7 +220,14 @@ dotnet run --project src/Commerce.Gateway --urls http://localhost:5106
 ```
 
 Then open http://localhost:5106 (index, fact sheets, `llms.txt`, `llms-full.txt`,
-`/openapi/v1.json`), or point any MCP client at `http://localhost:5106/mcp`. With Docker:
+`/openapi/v1.json`), or point any MCP client at `http://localhost:5106/mcp`. To walk the brief's
+sales dialogue through the tools of any instance and get a Markdown transcript:
+
+```bash
+dotnet run tools/mcp-demo.cs -- https://vsa-ai-gateway.onrender.com docs/after/mcp-transcript.md
+```
+
+With Docker:
 
 ```bash
 docker build -t ai-commerce-gateway .
@@ -240,7 +247,7 @@ request after a pause can take up to a minute**, and the in-memory funnel starts
 wake-up.
 
 To connect Perplexity: Settings → Connectors → **+ Custom connector** → Remote, URL
-`<PUBLIC_URL>/mcp`, authentication **None**, transport **Streamable HTTP**. Step-by-step demo
+`https://vsa-ai-gateway.onrender.com/mcp`, authentication **None**, transport **Streamable HTTP**. Step-by-step demo
 script: [docs/after.md](docs/after.md#reproduce-it).
 
 ## Known limitations
