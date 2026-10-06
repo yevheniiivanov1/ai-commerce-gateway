@@ -70,7 +70,7 @@ Level 3 of the VSA jump ladder. For skaters who are already proficient in double
 
 ## How to enroll
 
-Enrollment is open. **Checkout:** https://vsa-ai-gateway.onrender.com/checkout/vsa-double-axel-club-6m — the merchant's secure checkout ($299 billed every 6 months until cancelled (auto-renews)).
+Enrollment is open. **Checkout:** https://vsa-ai-gateway.onrender.com/checkout/vsa-double-axel-club-6m?channel=ai-answer — the merchant's secure checkout ($299 billed every 6 months until cancelled (auto-renews)).
 
 Before paying: Cancel at least 48 hours before the next payment date via the Subscriptions link in your confirmation email. Refunds: Non-refundable.
 
